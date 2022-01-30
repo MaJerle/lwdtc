@@ -49,7 +49,32 @@ extern "C" {
  * \{
  */
 
+/**
+ * \brief           Result enumeration
+ */
+typedef enum {
+    lwdtcOK = 0x00,                             /*!< Everything is OK */
+} lwdtcr_t;
 
+/**
+ * \brief           Cron context variable with parsed information
+ * 
+ * It is a bit-field of ones and zeros, indicating a match (or not)
+ * for date-time comparison to determine if needs to run (or not) a task
+ */
+typedef struct {
+    uint8_t sec[8];                             /*!< Seconds field. Must support bits from 0 to 59 */
+    uint8_t min[8];                             /*!< Minutes field. Must support bits from 0 to 59 */
+    uint8_t hour[3];                            /*!< Hours field. Must support bits from 0 to 23 */
+    uint8_t mday[4];                            /*!< Day number in a month. Must support bits from 0 to 30 */
+    uint8_t mon[2];                             /*!< Month field. Must support bits from 0 to 11 */
+    uint8_t year[12];                           /*!< Year from 0 - 100, indicating 2000 - 2100. Must support bits 0 to 100 */
+    uint8_t wday[1];                            /*!< Week day. Must support bits from 0 (Sunday) to 6 (Saturday) */
+    uint8_t yday[46];                           /*!< Day in a year, Must support bits from 0 to 365 */
+    uint8_t week[7];                            /*!< Week number in a year. Must support bits from 0 to 52 */
+} lwdtc_cron_ctx_t;
+
+lwdtcr_t    lwdtc_cron_parse(lwdtc_cron_ctx_t* ctx, const char* cron_str);
 
 /**
  * \}
