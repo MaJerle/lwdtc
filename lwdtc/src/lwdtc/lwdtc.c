@@ -72,7 +72,7 @@ lwdtc_cron_parse_with_len(lwdtc_cron_ctx_t* ctx, const char* cron_str, size_t cr
         /* TODO: Remove later */
         size_t start_index = i, stop_index;
         for (stop_index = start_index; stop_index < cron_str_len && cron_str[stop_index] != ' '; ++stop_index) {}
-        printf("Having token %d: \"%.*s\"\r\n", (int)index, (int)((stop_index - start_index)), &cron_str[start_index]);
+        LWDTC_DEBUG("Having token %d: \"%.*s\"\r\n", (int)index, (int)((stop_index - start_index)), &cron_str[start_index]);
 
         /*
          * Process token string
