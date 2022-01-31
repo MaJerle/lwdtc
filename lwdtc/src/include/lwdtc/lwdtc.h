@@ -54,7 +54,25 @@ extern "C" {
  */
 typedef enum {
     lwdtcOK = 0x00,                             /*!< Everything is OK */
+    lwdtcERRPAR,                                /*!< Invalid parameter */
+    lwdtcERRTOKEN,                              /*!< Token value is not valid */
 } lwdtcr_t;
+
+/* Minimum and maximum values for each of the fields */
+#define LWDTC_SEC_MIN                           0
+#define LWDTC_SEC_MAX                           59
+#define LWDTC_MIN_MIN                           0
+#define LWDTC_MIN_MAX                           59
+#define LWDTC_HOUR_MIN                          0
+#define LWDTC_HOUR_MAX                          23
+#define LWDTC_MDAY_MIN                          1
+#define LWDTC_MDAY_MAX                          31
+#define LWDTC_MON_MIN                           1
+#define LWDTC_MON_MAX                           12
+#define LWDTC_YEAR_MIN                          0
+#define LWDTC_YEAR_MAX                          100
+#define LWDTC_WDAY_MIN                          0
+#define LWDTC_WDAY_MAX                          6
 
 /**
  * \brief           Cron context variable with parsed information
@@ -70,10 +88,9 @@ typedef struct {
     uint8_t mon[2];                             /*!< Month field. Must support bits from 0 to 11 */
     uint8_t year[12];                           /*!< Year from 0 - 100, indicating 2000 - 2100. Must support bits 0 to 100 */
     uint8_t wday[1];                            /*!< Week day. Must support bits from 0 (Sunday) to 6 (Saturday) */
-    uint8_t yday[46];                           /*!< Day in a year, Must support bits from 0 to 365 */
-    uint8_t week[7];                            /*!< Week number in a year. Must support bits from 0 to 52 */
 } lwdtc_cron_ctx_t;
 
+lwdtcr_t    lwdtc_cron_parse_with_len(lwdtc_cron_ctx_t* ctx, const char* cron_str, size_t cron_str_len);
 lwdtcr_t    lwdtc_cron_parse(lwdtc_cron_ctx_t* ctx, const char* cron_str);
 
 /**

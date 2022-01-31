@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "lwdtc.h": "c"
+        "lwdtc.h": "c",
+        "string.h": "c"
     }
 }
