@@ -46,13 +46,98 @@
 #define LWDTC_DEBUG
 #endif /* LWDTC_DEV */
 
+static lwdtcr_t
+prv_set_field_bits(lwdtc_cron_ctx_t* ctx, size_t index, size_t bit_start_pos, size_t bit_end_pos, size_t bit_step) {
+    size_t bit_min, bit_max;
+    uint8_t* bit_map;
+
+    /* Get values for specific index */
+    switch (index) {
+        case 0: {
+            bit_min = LWDTC_SEC_MIN;
+            bit_max = LWDTC_SEC_MAX;
+            bit_map = ctx->sec;
+            break;
+        }
+        case 1: {
+            bit_min = LWDTC_MIN_MIN;
+            bit_max = LWDTC_MIN_MAX;
+            bit_map = ctx->min;
+            break;
+        }
+        case 2: {
+            bit_min = LWDTC_HOUR_MIN;
+            bit_max = LWDTC_HOUR_MAX;
+            bit_map = ctx->hour;
+            break;
+        }
+        case 3: {
+            bit_min = LWDTC_MDAY_MIN;
+            bit_max = LWDTC_MDAY_MAX;
+            bit_map = ctx->mday;
+            break;
+        }
+        case 4: {
+            bit_min = LWDTC_MON_MIN;
+            bit_max = LWDTC_MON_MAX;
+            bit_map = ctx->mon;
+            break;
+        }
+        case 5: {
+            bit_min = LWDTC_YEAR_MIN;
+            bit_max = LWDTC_YEAR_MAX;
+            bit_map = ctx->year;
+            break;
+        }
+        case 6: {
+            bit_min = LWDTC_WDAY_MIN;
+            bit_max = LWDTC_WDAY_MAX;
+            bit_map = ctx->wday;
+            break;
+        }
+        default: {
+            LWDTC_DEBUG("Wrong token index: %d\r\n", (int)index);
+            return lwdtcERRTOKEN;
+        }
+    }
+
+    /* Check lower boundaries */
+    if (bit_start_pos < bit_min) {
+        LWDTC_DEBUG("bit_start_pos & is less than minimum: %d/%d\r\n", (int)bit_start_pos, (int)bit_min);
+        return lwdtcERRTOKEN;
+    }
+    if (bit_end_pos > bit_max) {
+        /* Full value indicates complete range */
+        if (bit_end_pos != (size_t)-1) {
+            LWDTC_DEBUG("bit_end_pos is greater than maximum: %d/%d\r\n", (int)bit_end_pos, (int)bit_max);
+            return lwdtcERRTOKEN;
+        }
+        bit_end_pos = bit_max;
+    }
+
+    /* 
+     * Re-adapt bits to actual position in arrays.
+     * Decrease by lower boundary both sides
+     */
+    bit_start_pos -= bit_min;
+    bit_end_pos -= bit_min;
+
+    /* Set bits in map */
+    for (size_t i = bit_start_pos; i <= bit_end_pos; i += bit_step) {
+        bit_map[i / 8] |= 1 << (i & 0x07);
+    }
+}
+
 /**
  * \brief           Parses string with linux crontab-like syntax,
  *                  optionally enriched according to configured settings
  * \param           ctx: Cron context variable used for storing parsed result
- * \param           cron_str: Input cron string to parse data
+ * \param           cron_str: Input cron string to parse data, string format
+ *                  
+ *                  `seconds minutes hours day_in_month month year day_in_week`
+ * 
  * \param           cron_str_len: Length of input cron string,
- *                      not counting potential `NULL` termination character for strings
+ *                      not counting potential `NULL` termination character
  * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise
  */
 lwdtcr_t
@@ -144,7 +229,10 @@ lwdtc_cron_parse_with_len(lwdtc_cron_ctx_t* ctx, const char* cron_str, size_t cr
             LWDTC_DEBUG("bit_start_pos: %u, bit_end_pos: %u, bit_step: %u\r\n",
                         (unsigned)bit_start_pos, (unsigned)bit_end_pos, (unsigned)bit_step);
 
-            /* Once we pass this step, char must be either */
+            /* Set bits to the field */
+            prv_set_field_bits(ctx, index, bit_start_pos, bit_end_pos, bit_step);
+
+            /* Once we pass this step, char must be either space, comma, or end of string */
             if (cron_str[i] != ' ' && cron_str[i] != ',' && i != (cron_str_len - 1)) {
                 return lwdtcERRTOKEN;
             }
