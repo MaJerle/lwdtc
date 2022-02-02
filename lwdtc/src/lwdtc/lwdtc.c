@@ -110,6 +110,7 @@ prv_get_next_token(const char** tkn, size_t* tkn_len, const char** token_start, 
 static lwdtcr_t
 prv_parse_token(uint8_t* bit_map, const char* token, const size_t token_len, size_t val_min, size_t val_max) {
     size_t i = 0, bit_start_pos, bit_end_pos, bit_step;
+    uint8_t is_range;
 
     /*
      * Process token string
@@ -120,6 +121,7 @@ prv_parse_token(uint8_t* bit_map, const char* token, const size_t token_len, siz
         bit_start_pos = 0;
         bit_end_pos = (size_t)-1;
         bit_step = 1;
+        is_range = 0;
 
         ASSERT_ACTION(i < token_len);           /* Check token length */
 
@@ -159,6 +161,7 @@ prv_parse_token(uint8_t* bit_map, const char* token, const size_t token_len, siz
 
             /* Stop bit must be always higher or equal than start bit */
             ASSERT_TOKEN_VALID(bit_end_pos >= bit_start_pos);
+            is_range = 1;
         }
 
         /*
@@ -170,6 +173,11 @@ prv_parse_token(uint8_t* bit_map, const char* token, const size_t token_len, siz
         if (i < token_len && token[i] == '/') {
             ++i;
             ASSERT_TOKEN_VALID(prv_parse_num(&token[i], &i, &bit_step) == lwdtcOK);
+            
+            /* When range is not defined, maximum goes up to the end */
+            if (!is_range) {
+                bit_end_pos = (size_t)-1;
+            }
         }
 
         /* Check lower boundaries */
@@ -190,8 +198,8 @@ prv_parse_token(uint8_t* bit_map, const char* token, const size_t token_len, siz
                     (unsigned)bit_start_pos, (unsigned)bit_end_pos, (unsigned)bit_step);
 
         /* Set bits in map */
-        for (size_t i = bit_start_pos; i <= bit_end_pos; i += bit_step) {
-            bit_map[i / 8] |= 1 << (i & 0x07);
+        for (size_t bit = bit_start_pos; bit <= bit_end_pos; bit += bit_step) {
+            bit_map[bit >> 3] |= 1 << (bit & 0x07);
         }
 
         /* Once we pass this step, char must be either space, comma, or end of string */
@@ -236,27 +244,27 @@ lwdtc_cron_parse_with_len(lwdtc_cron_ctx_t* ctx, const char* cron_str, size_t cr
     
     ASSERT_ACTION(prv_get_next_token(&tkn, &tkn_len, &new_token, &new_token_len) == lwdtcOK);
     LWDTC_DEBUG("Minutes token: len: %d, token: %.*s, rem_len: %d\r\n", (int)new_token_len, (int)new_token_len, new_token, (int)tkn_len);
-    ASSERT_ACTION(prv_parse_token(ctx->sec, new_token, new_token_len, LWDTC_MIN_MIN, LWDTC_MIN_MAX) == lwdtcOK);
+    ASSERT_ACTION(prv_parse_token(ctx->min, new_token, new_token_len, LWDTC_MIN_MIN, LWDTC_MIN_MAX) == lwdtcOK);
     
     ASSERT_ACTION(prv_get_next_token(&tkn, &tkn_len, &new_token, &new_token_len) == lwdtcOK);
     LWDTC_DEBUG("Hours token: len: %d, token: %.*s, rem_len: %d\r\n", (int)new_token_len, (int)new_token_len, new_token, (int)tkn_len);
-    ASSERT_ACTION(prv_parse_token(ctx->sec, new_token, new_token_len, LWDTC_HOUR_MIN, LWDTC_HOUR_MAX) == lwdtcOK);
+    ASSERT_ACTION(prv_parse_token(ctx->hour, new_token, new_token_len, LWDTC_HOUR_MIN, LWDTC_HOUR_MAX) == lwdtcOK);
     
     ASSERT_ACTION(prv_get_next_token(&tkn, &tkn_len, &new_token, &new_token_len) == lwdtcOK);
     LWDTC_DEBUG("Mday token: len: %d, token: %.*s, rem_len: %d\r\n", (int)new_token_len, (int)new_token_len, new_token, (int)tkn_len);
-    ASSERT_ACTION(prv_parse_token(ctx->sec, new_token, new_token_len, LWDTC_MDAY_MIN, LWDTC_MDAY_MAX) == lwdtcOK);
+    ASSERT_ACTION(prv_parse_token(ctx->mday, new_token, new_token_len, LWDTC_MDAY_MIN, LWDTC_MDAY_MAX) == lwdtcOK);
     
     ASSERT_ACTION(prv_get_next_token(&tkn, &tkn_len, &new_token, &new_token_len) == lwdtcOK);
     LWDTC_DEBUG("Month token: len: %d, token: %.*s, rem_len: %d\r\n", (int)new_token_len, (int)new_token_len, new_token, (int)tkn_len);
-    ASSERT_ACTION(prv_parse_token(ctx->sec, new_token, new_token_len, LWDTC_MON_MIN, LWDTC_MON_MAX) == lwdtcOK);
+    ASSERT_ACTION(prv_parse_token(ctx->mon, new_token, new_token_len, LWDTC_MON_MIN, LWDTC_MON_MAX) == lwdtcOK);
     
     ASSERT_ACTION(prv_get_next_token(&tkn, &tkn_len, &new_token, &new_token_len) == lwdtcOK);
     LWDTC_DEBUG("Weekday token: len: %d, token: %.*s, rem_len: %d\r\n", (int)new_token_len, (int)new_token_len, new_token, (int)tkn_len);
-    ASSERT_ACTION(prv_parse_token(ctx->sec, new_token, new_token_len, LWDTC_WDAY_MIN, LWDTC_WDAY_MAX) == lwdtcOK);
+    ASSERT_ACTION(prv_parse_token(ctx->wday, new_token, new_token_len, LWDTC_WDAY_MIN, LWDTC_WDAY_MAX) == lwdtcOK);
     
     ASSERT_ACTION(prv_get_next_token(&tkn, &tkn_len, &new_token, &new_token_len) == lwdtcOK);
     LWDTC_DEBUG("Year token: len: %d, token: %.*s, rem_len: %d\r\n", (int)new_token_len, (int)new_token_len, new_token, (int)tkn_len);
-    ASSERT_ACTION(prv_parse_token(ctx->sec, new_token, new_token_len, LWDTC_YEAR_MIN, LWDTC_YEAR_MAX) == lwdtcOK);
+    ASSERT_ACTION(prv_parse_token(ctx->year, new_token, new_token_len, LWDTC_YEAR_MIN, LWDTC_YEAR_MAX) == lwdtcOK);
 
     return lwdtcOK;
 }
