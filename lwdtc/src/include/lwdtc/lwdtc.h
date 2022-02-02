@@ -54,6 +54,7 @@ extern "C" {
  */
 typedef enum {
     lwdtcOK = 0x00,                             /*!< Everything is OK */
+    lwdtcERR,                                   /*!< Generic error */
     lwdtcERRPAR,                                /*!< Invalid parameter */
     lwdtcERRTOKEN,                              /*!< Token value is not valid */
 } lwdtcr_t;
@@ -69,10 +70,10 @@ typedef enum {
 #define LWDTC_MDAY_MAX                          31
 #define LWDTC_MON_MIN                           1
 #define LWDTC_MON_MAX                           12
-#define LWDTC_YEAR_MIN                          0
-#define LWDTC_YEAR_MAX                          100
 #define LWDTC_WDAY_MIN                          0
 #define LWDTC_WDAY_MAX                          6
+#define LWDTC_YEAR_MIN                          0
+#define LWDTC_YEAR_MAX                          100
 
 /**
  * \brief           Cron context variable with parsed information
