@@ -89,7 +89,7 @@ typedef struct {
     uint8_t hour[3];                            /*!< Hours field. Must support bits from 0 to 23 */
     uint8_t mday[4];                            /*!< Day number in a month. Must support bits from 0 to 30 */
     uint8_t mon[2];                             /*!< Month field. Must support bits from 0 to 11 */
-    uint8_t year[12];                           /*!< Year from 0 - 100, indicating 2000 - 2100. Must support bits 0 to 100 */
+    uint8_t year[13];                           /*!< Year from 0 - 100, indicating 2000 - 2100. Must support bits 0 to 100 */
     uint8_t wday[1];                            /*!< Week day. Must support bits from 0 (Sunday) to 6 (Saturday) */
 } lwdtc_cron_ctx_t;
 

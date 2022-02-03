@@ -9,6 +9,9 @@ Platform independent Date, Time & Cron Utility library
 * Written in ANSI C99
 * Platform independent, easy to use
 * Support for date, time and cron utilities
+* Ultra-lightweight cron library for embedded systems
+* Cron supports numbers only, no string dates/months, quicker parsing
+* Support for `time.h` `struct tm` data structure for time operations
 * User friendly MIT license
 
 ## Contribute

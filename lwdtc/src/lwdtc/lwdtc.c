@@ -34,12 +34,12 @@
 #include <string.h>
 #include "lwdtc/lwdtc.h"
 
-#if LWDTC_DEV
+#if defined(LWDTC_DEV)
 #include <stdio.h>
 #define LWDTC_DEBUG                         printf
 #else
 #define LWDTC_DEBUG
-#endif /* LWDTC_DEV */
+#endif /* defined(LWDTC_DEV) */
 
 /* Internal defines */
 #define ASSERT_PARAM(c)                     if (!(c)) { return lwdtcERRPAR; }
@@ -258,6 +258,7 @@ lwdtc_cron_parse_with_len(lwdtc_cron_ctx_t* ctx, const char* cron_str, size_t cr
     tkn = cron_str;
     tkn_len = cron_str_len;
 
+    /* Todo: Go to structure and call parsing with structure parameter */
     ASSERT_ACTION(prv_get_next_token(&tkn, &tkn_len, &new_token, &new_token_len) == lwdtcOK);
     LWDTC_DEBUG("Seconds token: len: %d, token: %.*s, rem_len: %d\r\n", (int)new_token_len, (int)new_token_len, new_token, (int)tkn_len);
     ASSERT_ACTION(prv_parse_token(ctx->sec, new_token, new_token_len, LWDTC_SEC_MIN, LWDTC_SEC_MAX) == lwdtcOK);
