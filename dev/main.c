@@ -4,17 +4,23 @@
 
 static void
 print_bytes_string(const uint8_t* d, size_t btp) {
+    printf("|");
+    for (size_t i = 0; i < 13 - btp; ++i) {
+        printf("        |");
+    }
     while (btp-- > 0) {
         for (size_t i = 0; i < 8; ++i) {
             printf("%d", (int)((d[btp] & (1 << (7 - i))) > 0));
         }
-        printf(" ");
+        printf("|");
     }
     printf("\r\n");
 }
 
 static void
 print_ctx(const lwdtc_cron_ctx_t* ctx) {
+    printf("|103   96|95    88|87    80|79    72|71    64|63    56|55    48|47    40|39    32|31    24|23    16|15     8|7      0|\r\n");
+    printf("||      |||      |||      |||      |||      |||      |||      |||      |||      |||      |||      |||      |||      ||\r\n");
     print_bytes_string(ctx->sec, sizeof(ctx->sec));
     print_bytes_string(ctx->min, sizeof(ctx->min));
     print_bytes_string(ctx->hour, sizeof(ctx->hour));
@@ -35,8 +41,8 @@ const char* cron_tokens_list[] = {
                                                     (05:00, 05:05, 05:10, ...)
                                                     (10:00, 10:05, 10:10, ...) */
     "0 0 0 * * 5 * ",                           /* Every Friday at midnight */
-    "0 0 /2 * * * *",                           /* Every 2 hours at beginning of the hour */
-    "* * /2 * * * *",                           /* Every second of every minute every 2 hours */
+    "0 0 */2 * * * *",                          /* Every 2 hours at beginning of the hour */
+    "* * */2 * * * *",                          /* Every second of every minute every 2 hours */
     "0 0 0 * * 1-5 *",                          /* At midnight, 00:00 every week between Monday and Friday */
     "15 23 */6 * * * * ",                       /* Every 6 hours at (min:sec) 23:15 (00:23:15, 06:23:15, 12:23:15, ...) */
     "0 0 0 1 * * *",                            /* At 00:00:00 beginning of the month */
@@ -52,10 +58,13 @@ main(void) {
     time_t rawtime, rawtime_old = 0;
     struct tm* timeinfo;
     
-    
     for (size_t i = 0; i < (sizeof(cron_tokens_list) / sizeof(cron_tokens_list[0])); ++i) {
+        lwdtcr_t res;
         printf("Parsing token: %s\r\n", cron_tokens_list[i]);
-        printf("Result (0 = OK, > 0 = KO): %d\r\n", (int)lwdtc_cron_parse(&ctx, cron_tokens_list[i]));
+        if ((res = lwdtc_cron_parse(&ctx, cron_tokens_list[i])) != lwdtcOK) {
+            lwdtc_cron_parse(&ctx, cron_tokens_list[i]);
+        }
+        printf("Result (0 = OK, > 0 = KO): %d\r\n", (int)res);
         print_ctx(&ctx);
         printf("----\r\n");
     }
