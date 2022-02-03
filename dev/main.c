@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <windows.h>
 #include "lwdtc/lwdtc.h"
 
 static void
@@ -47,12 +48,38 @@ const char* cron_tokens_list[] = {
 int
 main(void) {
     lwdtc_cron_ctx_t ctx = {0};
+    lwdtc_dt_t dt;
+    time_t rawtime, rawtime_old = 0;
+    struct tm* timeinfo;
+    
     
     for (size_t i = 0; i < (sizeof(cron_tokens_list) / sizeof(cron_tokens_list[0])); ++i) {
         printf("Parsing token: %s\r\n", cron_tokens_list[i]);
         printf("Result (0 = OK, > 0 = KO): %d\r\n", (int)lwdtc_cron_parse(&ctx, cron_tokens_list[i]));
         print_ctx(&ctx);
         printf("----\r\n");
+    }
+
+    lwdtc_cron_parse(&ctx, "*/2 * * * * * *");
+    while (1) {
+        /* Get current time and react on changes only */
+        time(&rawtime);
+        if (rawtime != rawtime_old) {
+            rawtime_old = rawtime;
+            timeinfo = localtime(&rawtime);
+
+            printf("Time: %02d.%02d.%04d %02d:%02d:%02d\r\n",
+                (int)timeinfo->tm_mday, (int)timeinfo->tm_mon, (int)timeinfo->tm_year + 1900,
+                (int)timeinfo->tm_hour, (int)timeinfo->tm_min, (int)timeinfo->tm_sec
+            );
+
+            lwdtc_tm_to_dt(timeinfo, &dt);
+            if (lwdtc_cron_is_valid_for_time(&ctx, &dt) == lwdtcOK) {
+                /* Execute.. */
+                printf("Executing\r\n");
+            }
+        }
+        Sleep(10);
     }
     return 0;
 }
