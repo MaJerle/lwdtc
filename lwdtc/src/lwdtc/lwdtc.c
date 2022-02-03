@@ -307,14 +307,14 @@ lwdtc_cron_parse(lwdtc_cron_ctx_t* ctx, const char* cron_str) {
 /**
  * \brief           Check if cron is active at specific moment of time,
  *                      provided as parameter
- * @param           cron_ctx: Cron context object with valid structure
- * @param           tm_time: Current time to check if cron works for it.
+ * \param           cron_ctx: Cron context object with valid structure
+ * \param           tm_time: Current time to check if cron works for it.
  *                      Function assumes values in the structure are within valid boudnaries
  *                      and does not perform additional check
- * @return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise 
+ * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise 
  */
 lwdtcr_t
-lwdtc_cron_is_valid_for_time(const lwdtc_cron_ctx_t* cron_ctx, const struct tm* tm_time) {
+lwdtc_cron_is_valid_for_time(const lwdtc_cron_ctx_t* cron_ctx, const lwdtc_dt_t* tm_time) {
     ASSERT_PARAM(cron_ctx != NULL);
     ASSERT_PARAM(tm_time != NULL);
 
@@ -329,14 +329,58 @@ lwdtc_cron_is_valid_for_time(const lwdtc_cron_ctx_t* cron_ctx, const struct tm* 
      * 
      * This cron must be bitwise AND-ed between all fields instead
      */
-    if (!BIT_IS_SET(cron_ctx->sec, tm_time->tm_sec)
-        || !BIT_IS_SET(cron_ctx->min, tm_time->tm_min)
-        || !BIT_IS_SET(cron_ctx->hour, tm_time->tm_hour)
-        || !BIT_IS_SET(cron_ctx->mday, tm_time->tm_mday)
-        || !BIT_IS_SET(cron_ctx->mon, tm_time->tm_mon)
-        || !BIT_IS_SET(cron_ctx->wday, tm_time->tm_wday)
-        || !BIT_IS_SET(cron_ctx->year, (tm_time->tm_year - 100))) {
+    if (!BIT_IS_SET(cron_ctx->sec, tm_time->sec)
+        || !BIT_IS_SET(cron_ctx->min, tm_time->min)
+        || !BIT_IS_SET(cron_ctx->hour, tm_time->hour)
+        || !BIT_IS_SET(cron_ctx->mday, tm_time->mday)
+        || !BIT_IS_SET(cron_ctx->mon, tm_time->mon)
+        || !BIT_IS_SET(cron_ctx->wday, tm_time->wday)
+        || !BIT_IS_SET(cron_ctx->year, tm_time->year)) {
         return lwdtcERR;
     }
+    return lwdtcOK;
+}
+
+/**
+ * \brief           Convert `struct tm` to lwdtc-compatible date&time structure
+ * \param           tm_time: Datetime structure from `time.h` header to be converted
+ * \param           dt: Datetime structure to write converted data to
+ * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise 
+ */
+lwdtcr_t
+lwdtc_tm_to_dt(const struct tm* tm_time, lwdtc_dt_t* dt) {
+    ASSERT_PARAM(tm_time != NULL);
+    ASSERT_PARAM(dt != NULL);
+
+    dt->sec = tm_time->tm_sec;
+    dt->min = tm_time->tm_min;
+    dt->hour = tm_time->tm_hour;
+    dt->mday = tm_time->tm_mday;
+    dt->mon = tm_time->tm_mon;
+    dt->wday = tm_time->tm_wday;
+    dt->year = tm_time->tm_year - 100;
+
+    return lwdtcOK;
+}
+
+/**
+ * \brief           Convert lwdtc time structure to `struct tm` data type from `time.h` library
+ * \param           dt: Datetime structure to write converted data
+ * \param           tm_time: Datetime structure from `time.h` header to be converted
+ * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise 
+ */
+lwdtcr_t
+lwdtc_dt_to_tm(const lwdtc_dt_t* dt, struct tm* tm_time) {
+    ASSERT_PARAM(dt != NULL);
+    ASSERT_PARAM(tm_time != NULL);
+
+    tm_time->tm_sec = dt->sec;
+    tm_time->tm_min = dt->min;
+    tm_time->tm_hour = dt->hour;
+    tm_time->tm_mday = dt->mday;
+    tm_time->tm_mon = dt->mon;
+    tm_time->tm_wday = dt->wday;
+    tm_time->tm_year = dt->year + 100;
+
     return lwdtcOK;
 }

@@ -93,10 +93,25 @@ typedef struct {
     uint8_t wday[1];                            /*!< Week day. Must support bits from 0 (Sunday) to 6 (Saturday) */
 } lwdtc_cron_ctx_t;
 
+/**
+ * \brief           Date and time structure
+ */
+typedef struct {
+    uint8_t sec;
+    uint8_t min;
+    uint8_t hour;
+    uint8_t mday;
+    uint8_t mon;
+    uint8_t year;
+    uint8_t wday;
+} lwdtc_dt_t;
+
 lwdtcr_t    lwdtc_cron_parse_with_len(lwdtc_cron_ctx_t* ctx, const char* cron_str, size_t cron_str_len);
 lwdtcr_t    lwdtc_cron_parse(lwdtc_cron_ctx_t* ctx, const char* cron_str);
 
-lwdtcr_t    lwdtc_cron_is_valid_for_time(const lwdtc_cron_ctx_t* cron_ctx, const struct tm* tm_time);
+lwdtcr_t    lwdtc_cron_is_valid_for_time(const lwdtc_cron_ctx_t* cron_ctx, const lwdtc_dt_t* dt);
+lwdtcr_t    lwdtc_tm_to_dt(const struct tm* tm_time, lwdtc_dt_t* dt);
+lwdtcr_t    lwdtc_dt_to_tm(const lwdtc_dt_t* dt, struct tm* tm_time);
 
 /**
  * \}
