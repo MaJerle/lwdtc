@@ -145,19 +145,19 @@ prv_parse_token(uint8_t* bit_map, const char* token, const size_t token_len, siz
         ASSERT_ACTION(i < token_len);           /* Check token length */
 
         /*
-         * Token starts with either of 2 possible values
+         * Token starts with one of 2 possible values:
          *
-         * - "*" indicating all values
+         * - "*", indicating all values in the field available range
          * - digit, indicating fixed bit position
          * 
          * Followed by first character, second step is optional:
          * 
-         * - "/" to indicate steps (applicable for "*" or digit)
-         * - "-" to indicate range (only applicable for digit)
-         * - "," to indicate custom values (only applicable for digit)
+         * - "/" to indicate steps (applicable for "*" or digit). Can also appear after range step
+         * - "-" to indicate range
+         * - "," to indicate custom values
          */
 
-        /* Find first character first */
+        /* Find start character first */
         if (token[i] == '*') {
             i++;
             bit_start_pos = val_min;
@@ -194,19 +194,19 @@ prv_parse_token(uint8_t* bit_map, const char* token, const size_t token_len, siz
             ++i;
             ASSERT_TOKEN_VALID(prv_parse_num(&token[i], &i, &bit_step) == lwdtcOK);
             
-            /* When range is not defined, maximum goes up to the end */
+            /* When range is not defined, set maximum manually to the top */
             if (!is_range) {
                 bit_end_pos = (size_t)-1;
             }
         }
 
-        /* Check lower boundaries */
+        /* Adapt boundaries */
         if (bit_start_pos < val_min) {
             LWDTC_DEBUG("bit_start_pos & is less than minimum: %d/%d\r\n", (int)bit_start_pos, (int)val_min);
             return lwdtcERRTOKEN;
         }
         if (bit_end_pos > val_max) {
-            /* Full value indicates complete range */
+            /* Full value indicates complete range, perform manual strip */
             if (bit_end_pos != (size_t)-1) {
                 LWDTC_DEBUG("bit_end_pos is greater than maximum: %d/%d\r\n", (int)bit_end_pos, (int)val_max);
                 return lwdtcERRTOKEN;
@@ -222,11 +222,13 @@ prv_parse_token(uint8_t* bit_map, const char* token, const size_t token_len, siz
             bit_map[bit >> 3] |= 1 << (bit & 0x07);
         }
 
-        /* Once we pass this step, char must be either space, comma, or end of string */
+        /* If we are not at the end, character must be comma */
         if (i == token_len) {
             break;
+        } else if (token[i] != ',') {
+            return lwdtcERRTOKEN;
         }
-    } while (token[i++] == ',');
+    } while (token[i++] == ',');    /* Could be replaced by (1) */
     return lwdtcOK;
 }
 
