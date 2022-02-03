@@ -37,6 +37,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <limits.h>
+#include <time.h>
 #include "lwdtc/lwdtc_opt.h"
 
 #ifdef __cplusplus
@@ -82,6 +83,7 @@ typedef enum {
  * for date-time comparison to determine if needs to run (or not) a task
  */
 typedef struct {
+    uint32_t flags;                             /*!< List of all sort of flags for internal use */
     uint8_t sec[8];                             /*!< Seconds field. Must support bits from 0 to 59 */
     uint8_t min[8];                             /*!< Minutes field. Must support bits from 0 to 59 */
     uint8_t hour[3];                            /*!< Hours field. Must support bits from 0 to 23 */
@@ -93,6 +95,8 @@ typedef struct {
 
 lwdtcr_t    lwdtc_cron_parse_with_len(lwdtc_cron_ctx_t* ctx, const char* cron_str, size_t cron_str_len);
 lwdtcr_t    lwdtc_cron_parse(lwdtc_cron_ctx_t* ctx, const char* cron_str);
+
+lwdtcr_t    lwdtc_cron_is_valid_for_time(const lwdtc_cron_ctx_t* cron_ctx, const struct tm* tm_time);
 
 /**
  * \}

@@ -58,16 +58,25 @@ typedef struct {
     const char* token_next_start;               /*!< Pointer where next calculation must start to get new token */
 } prv_token_parse_t;
 
+/**
+ * \brief           Parse a number from a string
+ * \param[in]       token: Pointer to token string to parse, that starts with number
+ * \param[in,out]   index: Output variable to write index offset from start of token.
+ *                      Variable must be pre-initialized prior function call,
+ *                      as function will only add new value to existing one
+ * \param[out]      out_num: Pointer to output number
+ * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise 
+ */
 static lwdtcr_t
-prv_parse_num(const char* cron_str, size_t* index, size_t* out_num) {
+prv_parse_num(const char* token, size_t* index, size_t* out_num) {
     size_t cnt = 0;
 
-    ASSERT_TOKEN_VALID(CHAR_IS_NUM(*cron_str));
+    ASSERT_TOKEN_VALID(CHAR_IS_NUM(*token));
 
     /* Parse number in decimal format */
     *out_num = 0;
-    while (CHAR_IS_NUM(cron_str[cnt])) {
-        *out_num = (*out_num) * 10 + CHAR_TO_NUM(cron_str[cnt]);
+    while (CHAR_IS_NUM(token[cnt])) {
+        *out_num = (*out_num) * 10 + CHAR_TO_NUM(token[cnt]);
         ++cnt;
     }
     *index += cnt;
@@ -107,6 +116,16 @@ prv_get_next_token(const char** tkn, size_t* tkn_len, const char** token_start, 
     return lwdtcOK;
 }
 
+/**
+ * \brief           Parses string token and sets appropriate bits in the
+ *                      cron field bit-map, indicating when particular cron is valid
+ * \param           bit_map: Byte array to construct bit-map for valid cron
+ * \param           token: String token to parse
+ * \param           token_len: Length of token
+ * \param           val_min: Minimum allowed value user can input
+ * \param           val_max: Maximum allowed value user can input
+ * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise
+ */
 static lwdtcr_t
 prv_parse_token(uint8_t* bit_map, const char* token, const size_t token_len, size_t val_min, size_t val_max) {
     size_t i = 0, bit_start_pos, bit_end_pos, bit_step;
@@ -141,6 +160,7 @@ prv_parse_token(uint8_t* bit_map, const char* token, const size_t token_len, siz
         /* Find first character first */
         if (token[i] == '*') {
             i++;
+            bit_start_pos = val_min;
         } else {
             ASSERT_TOKEN_VALID(prv_parse_num(&token[i], &i, &bit_start_pos) == lwdtcOK);
             bit_end_pos = bit_start_pos;
@@ -282,4 +302,41 @@ lwdtc_cron_parse_with_len(lwdtc_cron_ctx_t* ctx, const char* cron_str, size_t cr
 lwdtcr_t
 lwdtc_cron_parse(lwdtc_cron_ctx_t* ctx, const char* cron_str) {
     return lwdtc_cron_parse_with_len(ctx, cron_str, strlen(cron_str));
+}
+
+/**
+ * \brief           Check if cron is active at specific moment of time,
+ *                      provided as parameter
+ * @param           cron_ctx: Cron context object with valid structure
+ * @param           tm_time: Current time to check if cron works for it.
+ *                      Function assumes values in the structure are within valid boudnaries
+ *                      and does not perform additional check
+ * @return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise 
+ */
+lwdtcr_t
+lwdtc_cron_is_valid_for_time(const lwdtc_cron_ctx_t* cron_ctx, const struct tm* tm_time) {
+    ASSERT_PARAM(cron_ctx != NULL);
+    ASSERT_PARAM(tm_time != NULL);
+
+    #define BIT_IS_SET(map, pos)            ((map)[(pos) >> 3] & (1 << ((pos) & 0x07)))
+
+    /* 
+     * Cron is valid only if all values are a pass
+     * 
+     * This is different from crontab linux command where, for example, cron is valid:
+     * - When particular day in month occurs 
+     * - or when particular day in week occurs, OR in between.
+     * 
+     * This cron must be bitwise AND-ed between all fields instead
+     */
+    if (!BIT_IS_SET(cron_ctx->sec, tm_time->tm_sec)
+        || !BIT_IS_SET(cron_ctx->min, tm_time->tm_min)
+        || !BIT_IS_SET(cron_ctx->hour, tm_time->tm_hour)
+        || !BIT_IS_SET(cron_ctx->mday, tm_time->tm_mday)
+        || !BIT_IS_SET(cron_ctx->mon, tm_time->tm_mon)
+        || !BIT_IS_SET(cron_ctx->wday, tm_time->tm_wday)
+        || !BIT_IS_SET(cron_ctx->year, (tm_time->tm_year - 100))) {
+        return lwdtcERR;
+    }
+    return lwdtcOK;
 }

@@ -23,12 +23,36 @@ print_ctx(const lwdtc_cron_ctx_t* ctx) {
     print_bytes_string(ctx->year, sizeof(ctx->year));
 }
 
+const char* cron_tokens_list[] = {
+    "* * * * * * *",                            /* Token is valid all the time, will fire every day */
+    "0 * * * * * *",                            /* Token is valid at beginning of each minute (seconds == 0) */
+    "* * * * * 2 *",                            /* Fires every second each Tuesday */
+    "*/5 * * * * * *",                          /* Fires every 5 seconds */
+    "*/5 */5 * * * * *",                        /* Fires each 5 seconds in a minute, every 5 minutes
+                                                    (min:sec)
+                                                    (00:00, 00:05, 00:10, ...)
+                                                    (05:00, 05:05, 05:10, ...)
+                                                    (10:00, 10:05, 10:10, ...) */
+    "0 0 0 * * 5 * ",                           /* Every Friday at midnight */
+    "0 0 /2 * * * *",                           /* Every 2 hours at beginning of the hour */
+    "* * /2 * * * *",                           /* Every second of every minute every 2 hours */
+    "0 0 0 * * 1-5 *",                          /* At midnight, 00:00 every week between Monday and Friday */
+    "15 23 */6 * * * * ",                       /* Every 6 hours at (min:sec) 23:15 (00:23:15, 06:23:15, 12:23:15, ...) */
+    "0 0 0 1 * * *",                            /* At 00:00:00 beginning of the month */
+    "0 0 0 1 */3 * *",                          /* Every beginning of the quarter, every first day in a month in every 3rd month at 00:00:00 */
+    "10 15 20 * 8 6 *",                         /* At 20:15:20 every Saturday in August */
+    "10 15 20 8 * 6 *",                         /* At 20:15:20 every Saturday that is also 8th day in Month (both must match, day saturday and date 8th) */
+};
+
 int
 main(void) {
     lwdtc_cron_ctx_t ctx = {0};
     
-    printf("Parsing token result: %d\r\n", (int)lwdtc_cron_parse(&ctx, "1 * */15 2-15/3 1,2,3,4 3/2 0-23"));
-    print_ctx(&ctx);
-
+    for (size_t i = 0; i < (sizeof(cron_tokens_list) / sizeof(cron_tokens_list[0])); ++i) {
+        printf("Parsing token: %s\r\n", cron_tokens_list[i]);
+        printf("Result (0 = OK, > 0 = KO): %d\r\n", (int)lwdtc_cron_parse(&ctx, cron_tokens_list[i]));
+        print_ctx(&ctx);
+        printf("----\r\n");
+    }
     return 0;
 }
