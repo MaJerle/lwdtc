@@ -53,3 +53,6 @@ Table of contents
   :maxdepth: 2
 
   self
+  get-started/index
+  user-manual/index
+  api-reference/index

@@ -234,10 +234,7 @@ prv_parse_token(uint8_t* bit_map, const char* token, const size_t token_len, siz
  * \brief           Parses string with linux crontab-like syntax,
  *                  optionally enriched according to configured settings
  * \param           ctx: Cron context variable used for storing parsed result
- * \param           cron_str: Input cron string to parse data, string format
- *                  
- *                  `seconds minutes hours day_in_month month year day_in_week`
- * 
+ * \param           cron_str: Input cron string to parse data, using valid cron format recognized by the lib
  * \param           cron_str_len: Length of input cron string,
  *                      not counting potential `NULL` termination character
  * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise
@@ -294,10 +291,7 @@ lwdtc_cron_parse_with_len(lwdtc_cron_ctx_t* ctx, const char* cron_str, size_t cr
  * \brief           Parses string with linux crontab-like syntax,
  *                  optionally enriched according to configured settings
  * \param           ctx: Cron context variable used for storing parsed result
- * \param           cron_str: Input cron string to parse data, with `NULL` termination, string format
- *                  
- *                  `seconds minutes hours day_in_month month year day_in_week`
- * 
+ * \param           cron_str: `NULL` terminated cron string, using valid cron format recognized by the lib
  * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise
  */
 lwdtcr_t
