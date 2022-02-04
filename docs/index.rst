@@ -56,3 +56,4 @@ Table of contents
   get-started/index
   user-manual/index
   api-reference/index
+  examples/index

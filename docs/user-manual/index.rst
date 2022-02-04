@@ -7,6 +7,4 @@ User manual
     :maxdepth: 2
 
     how-it-works
-    float-double
-    thread-safety
-    tests
+    cron-format
