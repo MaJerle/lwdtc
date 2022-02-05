@@ -6,5 +6,5 @@ User manual
 .. toctree::
     :maxdepth: 2
 
-    how-it-works
-    cron-format
+    cron
+    cron-dt-range

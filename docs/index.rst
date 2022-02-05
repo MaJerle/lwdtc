@@ -5,6 +5,8 @@ Welcome to the documentation for version |version|.
 
 LwDTC is lightweight, platform independent library for date, time and cron utility management.
 
+Main motivation comes from the necessity of simple cron for my own personal home automation project, with ``1`` second granularity.
+
 .. image:: static/images/logo.svg
     :align: center
 
@@ -19,6 +21,9 @@ Features
 * Written in ANSI C99
 * Platform independent, easy to use
 * Support for date, time and cron utilities
+* Ultra-lightweight cron library for embedded systems
+* Cron supports numbers only, no string dates/months, quicker parsing
+* Support for `time.h` `struct tm` data structure for time operations
 * User friendly MIT license
 
 Requirements
@@ -56,4 +61,3 @@ Table of contents
   get-started/index
   user-manual/index
   api-reference/index
-  examples/index

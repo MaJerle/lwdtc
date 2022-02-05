@@ -19,6 +19,10 @@ add_executable(${PROJECT_NAME})
 # Add key executable block
 target_sources(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/dev/main.c
+
+    # Examples
+    ${CMAKE_CURRENT_LIST_DIR}/examples/cron_basic.c
+    ${CMAKE_CURRENT_LIST_DIR}/examples/cron_dt_range.c
     )
 
 # Add key include paths

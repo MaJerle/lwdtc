@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "lwdtc.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "time.h": "c",
+        "windows.h": "c"
     }
 }
