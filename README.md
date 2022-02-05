@@ -12,6 +12,7 @@ Platform independent Date, Time & Cron Utility library
 * Ultra-lightweight cron library for embedded systems
 * Cron supports numbers only, no string dates/months, quicker parsing
 * Support for `time.h` `struct tm` data structure for time operations
+* Date and time range support with CRON syntax
 * User friendly MIT license
 
 ## Contribute
