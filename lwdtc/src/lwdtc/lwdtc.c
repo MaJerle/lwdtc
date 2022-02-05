@@ -47,16 +47,22 @@
 #define ASSERT_ACTION(c)                    if (!(c)) { return lwdtcERR; }
 #define CHAR_IS_NUM(c)                      ((c) >= '0' && (c) <= '9')
 #define CHAR_TO_NUM(c)                      ((c) - '0')
+#define BIT_IS_SET(map, pos)                ((map)[(pos) >> 3] & (1 << ((pos) & 0x07)))
 
 /**
- * \brief           Private structure to generate next token
+ * \brief           Private structure to parse cron input
  */
 typedef struct {
-    const char* token_start_orig;               /*!< Very original pointer where token starts */
-    size_t token_orig_len;                      /*!< Length of original token */
+    lwdtc_cron_ctx_t* ctx;                      /*!< Cron parser context pointer */
 
-    const char* token_next_start;               /*!< Pointer where next calculation must start to get new token */
-} prv_token_parse_t;
+    /* Token input to be filled at the beginning */
+    const char* cron_str;                       /*!< Original cron string, later modified by parser on each token */
+    size_t cron_str_len;                        /*!< Initial cron string length */
+
+    /* Generated token for particular field */
+    const char* new_token;                      /*!< Start of new parsed token */
+    size_t new_token_len;                       /*!< Length of new parsed token */
+} prv_cron_parser_ctx_t;
 
 /**
  * \brief           Parse a number from a string
@@ -85,51 +91,46 @@ prv_parse_num(const char* token, size_t* index, size_t* out_num) {
 
 /**
  * \brief           Get start of next token from a list
- * \param[in]       tkn: Pointer to pointer to token.
- *                      Pointer gets modified to the end of output token.
- *                      User can use it to compare if token ended
- * \param[in]       tkn_len: Pointer to input string length.
- *                      It gets modified at each call and adjusts to remaining token length
- * 
- * \param[out]      token_start: Pointer to pointer to variable where
- *                      to point at start of token 
- * \param[out]      len_out: Pointer to optional output variable for token length calculation
+ * \param[in,out]   parser: Parser structure with all input data
  * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise 
  */
 lwdtcr_t
-prv_get_next_token(const char** tkn, size_t* tkn_len, const char** token_start, size_t* len_out) {
-    const char* s = *tkn;
-    size_t len = *tkn_len;
+prv_get_next_token(prv_cron_parser_ctx_t* parser) {
+    const char* s = parser->cron_str;
+    size_t len = parser->cron_str_len;
 
     /* Remove all leading spaces */
     for (; len > 0 && s != NULL && *s == ' ' && *s != '\0'; ++s, --len) {}
     if (len == 0 || s == NULL || *s == '\0') {
         return lwdtcERRTOKEN;
     }
-    *token_start = s;                           /* Set start of the token */
+    parser->new_token = s;                           /* Set start of the token */
 
     /* Search for the end of token */
     for (; len > 0 && s != NULL && *s != ' ' && *s != '\0'; ++s, --len);
-    *tkn = s;                                   /* Set new token position */
-    *len_out = s - *token_start;                /* Get token length */
-    *tkn_len = len;                             /* Set remaining length */
+    parser->new_token_len = s - parser->new_token;  /* Get token length */
+
+    parser->cron_str = s;                       /* Set new token position */
+    parser->cron_str_len = len;                 /* Set remaining length */
     return lwdtcOK;
 }
 
 /**
  * \brief           Parses string token and sets appropriate bits in the
  *                      cron field bit-map, indicating when particular cron is valid
- * \param           bit_map: Byte array to construct bit-map for valid cron
- * \param           token: String token to parse
- * \param           token_len: Length of token
- * \param           val_min: Minimum allowed value user can input
- * \param           val_max: Maximum allowed value user can input
+ * \param[in,out]    parser: Parser structure with all input data
+ * \param[in]       bit_map: Byte array to construct bit-map for valid cron
+ * \param[in]       val_min: Minimum allowed value user can input
+ * \param[in]       val_max: Maximum allowed value user can input
  * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise
  */
 static lwdtcr_t
-prv_parse_token(uint8_t* bit_map, const char* token, const size_t token_len, size_t val_min, size_t val_max) {
+prv_get_and_parse_next_token(prv_cron_parser_ctx_t* parser, uint8_t* bit_map, size_t val_min, size_t val_max) {
     size_t i = 0, bit_start_pos, bit_end_pos, bit_step;
     uint8_t is_range;
+
+    /* Get next token from string */
+    ASSERT_ACTION(prv_get_next_token(parser) == lwdtcOK);
 
     /*
      * Process token string
@@ -141,8 +142,8 @@ prv_parse_token(uint8_t* bit_map, const char* token, const size_t token_len, siz
         bit_end_pos = (size_t)-1;
         bit_step = 1;
         is_range = 0;
-
-        ASSERT_ACTION(i < token_len);           /* Check token length */
+        
+        ASSERT_ACTION(i < parser->new_token_len);   /* Check token length */
 
         /*
          * Token starts with one of 2 possible values:
@@ -158,11 +159,11 @@ prv_parse_token(uint8_t* bit_map, const char* token, const size_t token_len, siz
          */
 
         /* Find start character first */
-        if (token[i] == '*') {
+        if (parser->new_token[i] == '*') {
             i++;
             bit_start_pos = val_min;
         } else {
-            ASSERT_TOKEN_VALID(prv_parse_num(&token[i], &i, &bit_start_pos) == lwdtcOK);
+            ASSERT_TOKEN_VALID(prv_parse_num(&parser->new_token[i], &i, &bit_start_pos) == lwdtcOK);
             bit_end_pos = bit_start_pos;
         }
 
@@ -172,12 +173,12 @@ prv_parse_token(uint8_t* bit_map, const char* token, const size_t token_len, siz
          * At this moment, step is still "1", indicating
          * every value between min and max included
          */
-        if (i < token_len && token[i] == '-') {
+        if (i < parser->new_token_len && parser->new_token[i] == '-') {
             ++i;
 
             /* Parse second part of range */
-            ASSERT_ACTION(i < token_len);
-            ASSERT_TOKEN_VALID(prv_parse_num(&token[i], &i, &bit_end_pos) == lwdtcOK);
+            ASSERT_ACTION(i < parser->new_token_len);
+            ASSERT_TOKEN_VALID(prv_parse_num(&parser->new_token[i], &i, &bit_end_pos) == lwdtcOK);
 
             /* Stop bit must be always higher or equal than start bit */
             ASSERT_TOKEN_VALID(bit_end_pos >= bit_start_pos);
@@ -190,9 +191,9 @@ prv_parse_token(uint8_t* bit_map, const char* token, const size_t token_len, siz
          * A step_bit must be calculated & end_position set to maximum,
          * indicating we want to use full range of available value
          */
-        if (i < token_len && token[i] == '/') {
+        if (i < parser->new_token_len && parser->new_token[i] == '/') {
             ++i;
-            ASSERT_TOKEN_VALID(prv_parse_num(&token[i], &i, &bit_step) == lwdtcOK);
+            ASSERT_TOKEN_VALID(prv_parse_num(&parser->new_token[i], &i, &bit_step) == lwdtcOK);
             
             /* When range is not defined, set maximum manually to the top */
             if (!is_range) {
@@ -223,77 +224,67 @@ prv_parse_token(uint8_t* bit_map, const char* token, const size_t token_len, siz
         }
 
         /* If we are not at the end, character must be comma */
-        if (i == token_len) {
+        if (i == parser->new_token_len) {
             break;
-        } else if (token[i] != ',') {
+        } else if (parser->new_token[i] != ',') {
             return lwdtcERRTOKEN;
         }
-    } while (token[i++] == ',');    /* Could be replaced by (1) */
+    } while (parser->new_token[i++] == ',');    /* Could be replaced by (1) */
     return lwdtcOK;
 }
 
 /**
- * \brief           Parses string with linux crontab-like syntax,
+ * \brief           Parse string with linux crontab-like syntax,
  *                  optionally enriched according to configured settings
- * \param           ctx: Cron context variable used for storing parsed result
- * \param           cron_str: Input cron string to parse data, using valid cron format recognized by the lib
- * \param           cron_str_len: Length of input cron string,
+ * \param[in]       ctx: Cron context variable used for storing parsed result
+ * \param[in]       cron_str: Input cron string to parse data, using valid cron format recognized by the lib
+ * \param[in]       cron_str_len: Length of input cron string,
  *                      not counting potential `NULL` termination character
  * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise
  */
 lwdtcr_t
 lwdtc_cron_parse_with_len(lwdtc_cron_ctx_t* ctx, const char* cron_str, size_t cron_str_len) {
-    size_t i = 0, index = 0, tkn_len, new_token_len;
-    const char* tkn, *new_token;
+    prv_cron_parser_ctx_t parser = {0};
 
     /* Verify all parameters */
     ASSERT_PARAM(ctx != NULL);
     ASSERT_PARAM(cron_str != NULL);
     ASSERT_PARAM(cron_str_len > 0);
-
     memset(ctx, 0x00, sizeof(*ctx));            /* Reset structure */
 
-    /* Set input data */
-    tkn = cron_str;
-    tkn_len = cron_str_len;
+    /* Setup parser */
+    parser.ctx = ctx;
+    parser.cron_str = cron_str;
+    parser.cron_str_len = cron_str_len;
 
-    /* Todo: Go to structure and call parsing with structure parameter */
-    ASSERT_ACTION(prv_get_next_token(&tkn, &tkn_len, &new_token, &new_token_len) == lwdtcOK);
-    LWDTC_DEBUG("Seconds token: len: %d, token: %.*s, rem_len: %d\r\n", (int)new_token_len, (int)new_token_len, new_token, (int)tkn_len);
-    ASSERT_ACTION(prv_parse_token(ctx->sec, new_token, new_token_len, LWDTC_SEC_MIN, LWDTC_SEC_MAX) == lwdtcOK);
+    ASSERT_ACTION(prv_get_and_parse_next_token(&parser, ctx->sec, LWDTC_SEC_MIN, LWDTC_SEC_MAX) == lwdtcOK);
+    LWDTC_DEBUG("Seconds token: len: %d, token: %.*s, rem_len: %d\r\n", (int)parser.new_token_len, (int)parser.new_token_len, parser.new_token, (int)parser.cron_str_len);
     
-    ASSERT_ACTION(prv_get_next_token(&tkn, &tkn_len, &new_token, &new_token_len) == lwdtcOK);
-    LWDTC_DEBUG("Minutes token: len: %d, token: %.*s, rem_len: %d\r\n", (int)new_token_len, (int)new_token_len, new_token, (int)tkn_len);
-    ASSERT_ACTION(prv_parse_token(ctx->min, new_token, new_token_len, LWDTC_MIN_MIN, LWDTC_MIN_MAX) == lwdtcOK);
+    ASSERT_ACTION(prv_get_and_parse_next_token(&parser, ctx->min, LWDTC_MIN_MIN, LWDTC_MIN_MAX) == lwdtcOK);
+    LWDTC_DEBUG("Minutes token: len: %d, token: %.*s, rem_len: %d\r\n", (int)parser.new_token_len, (int)parser.new_token_len, parser.new_token, (int)parser.cron_str_len);
     
-    ASSERT_ACTION(prv_get_next_token(&tkn, &tkn_len, &new_token, &new_token_len) == lwdtcOK);
-    LWDTC_DEBUG("Hours token: len: %d, token: %.*s, rem_len: %d\r\n", (int)new_token_len, (int)new_token_len, new_token, (int)tkn_len);
-    ASSERT_ACTION(prv_parse_token(ctx->hour, new_token, new_token_len, LWDTC_HOUR_MIN, LWDTC_HOUR_MAX) == lwdtcOK);
+    ASSERT_ACTION(prv_get_and_parse_next_token(&parser, ctx->hour, LWDTC_HOUR_MIN, LWDTC_HOUR_MAX) == lwdtcOK);
+    LWDTC_DEBUG("Hours token: len: %d, token: %.*s, rem_len: %d\r\n", (int)parser.new_token_len, (int)parser.new_token_len, parser.new_token, (int)parser.cron_str_len);
     
-    ASSERT_ACTION(prv_get_next_token(&tkn, &tkn_len, &new_token, &new_token_len) == lwdtcOK);
-    LWDTC_DEBUG("Mday token: len: %d, token: %.*s, rem_len: %d\r\n", (int)new_token_len, (int)new_token_len, new_token, (int)tkn_len);
-    ASSERT_ACTION(prv_parse_token(ctx->mday, new_token, new_token_len, LWDTC_MDAY_MIN, LWDTC_MDAY_MAX) == lwdtcOK);
+    ASSERT_ACTION(prv_get_and_parse_next_token(&parser, ctx->mday, LWDTC_MDAY_MIN, LWDTC_MDAY_MAX) == lwdtcOK);
+    LWDTC_DEBUG("Mday token: len: %d, token: %.*s, rem_len: %d\r\n", (int)parser.new_token_len, (int)parser.new_token_len, parser.new_token, (int)parser.cron_str_len);
     
-    ASSERT_ACTION(prv_get_next_token(&tkn, &tkn_len, &new_token, &new_token_len) == lwdtcOK);
-    LWDTC_DEBUG("Month token: len: %d, token: %.*s, rem_len: %d\r\n", (int)new_token_len, (int)new_token_len, new_token, (int)tkn_len);
-    ASSERT_ACTION(prv_parse_token(ctx->mon, new_token, new_token_len, LWDTC_MON_MIN, LWDTC_MON_MAX) == lwdtcOK);
+    ASSERT_ACTION(prv_get_and_parse_next_token(&parser, ctx->mon, LWDTC_MON_MIN, LWDTC_MON_MAX) == lwdtcOK);
+    LWDTC_DEBUG("Month token: len: %d, token: %.*s, rem_len: %d\r\n", (int)parser.new_token_len, (int)parser.new_token_len, parser.new_token, (int)parser.cron_str_len);
     
-    ASSERT_ACTION(prv_get_next_token(&tkn, &tkn_len, &new_token, &new_token_len) == lwdtcOK);
-    LWDTC_DEBUG("Weekday token: len: %d, token: %.*s, rem_len: %d\r\n", (int)new_token_len, (int)new_token_len, new_token, (int)tkn_len);
-    ASSERT_ACTION(prv_parse_token(ctx->wday, new_token, new_token_len, LWDTC_WDAY_MIN, LWDTC_WDAY_MAX) == lwdtcOK);
+    ASSERT_ACTION(prv_get_and_parse_next_token(&parser, ctx->wday, LWDTC_WDAY_MIN, LWDTC_WDAY_MAX) == lwdtcOK);
+    LWDTC_DEBUG("Weekday token: len: %d, token: %.*s, rem_len: %d\r\n", (int)parser.new_token_len, (int)parser.new_token_len, parser.new_token, (int)parser.cron_str_len);
     
-    ASSERT_ACTION(prv_get_next_token(&tkn, &tkn_len, &new_token, &new_token_len) == lwdtcOK);
-    LWDTC_DEBUG("Year token: len: %d, token: %.*s, rem_len: %d\r\n", (int)new_token_len, (int)new_token_len, new_token, (int)tkn_len);
-    ASSERT_ACTION(prv_parse_token(ctx->year, new_token, new_token_len, LWDTC_YEAR_MIN, LWDTC_YEAR_MAX) == lwdtcOK);
-
+    ASSERT_ACTION(prv_get_and_parse_next_token(&parser, ctx->year, LWDTC_YEAR_MIN, LWDTC_YEAR_MAX) == lwdtcOK);
+    LWDTC_DEBUG("Year token: len: %d, token: %.*s, rem_len: %d\r\n", (int)parser.new_token_len, (int)parser.new_token_len, parser.new_token, (int)parser.cron_str_len);
     return lwdtcOK;
 }
 
 /**
- * \brief           Parses string with linux crontab-like syntax,
+ * \brief           Parse string with linux crontab-like syntax,
  *                  optionally enriched according to configured settings
- * \param           ctx: Cron context variable used for storing parsed result
- * \param           cron_str: `NULL` terminated cron string, using valid cron format recognized by the lib
+ * \param[in]       ctx: Cron context variable used for storing parsed result
+ * \param[in]       cron_str: `NULL` terminated cron string, using valid cron format recognized by the lib
  * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise
  */
 lwdtcr_t
@@ -302,20 +293,48 @@ lwdtc_cron_parse(lwdtc_cron_ctx_t* ctx, const char* cron_str) {
 }
 
 /**
+ * \brief           Parse multiple CRON strins at the same time.
+ *                      It returns immediately on first failed CRON
+ * \param[in]       cron_ctx: Cron context variable used for storing parsed result
+ * \param[in]       cron_strs: Pointer to array of string pointers with cron strings
+ * \param[in]       ctx_len: Number of elements to process
+ * \param[out]      fail_index: Optional pointer to output variable to store array index of failed CRON.
+ *                      Used only if function doesn't return \ref lwdtcOK,
+ *                      otherwise pointer doesn't get modified
+ * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise
+ */
+lwdtcr_t
+lwdtc_cron_parse_multi(lwdtc_cron_ctx_t* cron_ctx, const char** cron_strs, size_t ctx_len, size_t* fail_index) {
+    lwdtcr_t res;
+
+    ASSERT_PARAM(cron_ctx != NULL);
+    ASSERT_PARAM(cron_strs != NULL);
+    ASSERT_PARAM(ctx_len > 0);
+
+    for (size_t i = 0; i < ctx_len; ++i) {
+        if ((res = lwdtc_cron_parse_with_len(&cron_ctx[i], cron_strs[i], strlen(cron_strs[i]))) != lwdtcOK) {
+            if (fail_index != NULL) {
+                *fail_index = i;
+            }
+            return res;
+        }
+    }
+    return lwdtcOK;
+}
+
+/**
  * \brief           Check if cron is active at specific moment of time,
  *                      provided as parameter
- * \param           cron_ctx: Cron context object with valid structure
- * \param           tm_time: Current time to check if cron works for it.
- *                      Function assumes values in the structure are within valid boudnaries
+ * \param[in]       tm_time: Current time to check if cron works for it.
+ *                      Function assumes values in the structure are within valid boundaries
  *                      and does not perform additional check
+ * \param[in]       cron_ctx: Cron context object with valid structure
  * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise 
  */
 lwdtcr_t
-lwdtc_cron_is_valid_for_time(const lwdtc_cron_ctx_t* cron_ctx, const lwdtc_dt_t* tm_time) {
-    ASSERT_PARAM(cron_ctx != NULL);
+lwdtc_cron_is_valid_for_time(const struct tm* tm_time, const lwdtc_cron_ctx_t* cron_ctx) {
     ASSERT_PARAM(tm_time != NULL);
-
-    #define BIT_IS_SET(map, pos)            ((map)[(pos) >> 3] & (1 << ((pos) & 0x07)))
+    ASSERT_PARAM(cron_ctx != NULL);
 
     /* 
      * Cron is valid only if all values are a pass
@@ -324,24 +343,76 @@ lwdtc_cron_is_valid_for_time(const lwdtc_cron_ctx_t* cron_ctx, const lwdtc_dt_t*
      * - When particular day in month occurs 
      * - or when particular day in week occurs, OR in between.
      * 
-     * This cron must be bitwise AND-ed between all fields instead
+     * This cron must be bitwise AND-ed between all fields
      */
-    if (!BIT_IS_SET(cron_ctx->sec, tm_time->sec)
-        || !BIT_IS_SET(cron_ctx->min, tm_time->min)
-        || !BIT_IS_SET(cron_ctx->hour, tm_time->hour)
-        || !BIT_IS_SET(cron_ctx->mday, tm_time->mday)
-        || !BIT_IS_SET(cron_ctx->mon, tm_time->mon)
-        || !BIT_IS_SET(cron_ctx->wday, tm_time->wday)
-        || !BIT_IS_SET(cron_ctx->year, tm_time->year)) {
+    if (!BIT_IS_SET(cron_ctx->sec, tm_time->tm_sec)
+        || !BIT_IS_SET(cron_ctx->min, tm_time->tm_min)
+        || !BIT_IS_SET(cron_ctx->hour, tm_time->tm_hour)
+        || !BIT_IS_SET(cron_ctx->mday, tm_time->tm_mday)
+        || !BIT_IS_SET(cron_ctx->mon, tm_time->tm_mon)
+        || !BIT_IS_SET(cron_ctx->wday, tm_time->tm_wday)
+        || !BIT_IS_SET(cron_ctx->year, (tm_time->tm_year - 100))) {
         return lwdtcERR;
     }
     return lwdtcOK;
 }
 
 /**
- * \brief           Convert `struct tm` to lwdtc-compatible date&time structure
- * \param           tm_time: Datetime structure from `time.h` header to be converted
- * \param           dt: Datetime structure to write converted data to
+ * \brief           Check if current time fits to at least one of provided context arrays (OR operation)
+ * \param[in]       tm_time: Current time to check if cron works for it.
+ *                      Function assumes values in the structure are within valid boundaries
+ *                      and does not perform additional check
+ * \param[in]       cron_ctx: Pointer to array of cron ctx objects
+ * \param[in]       ctx_len: Number of context array length
+ * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise 
+ */
+lwdtcr_t
+lwdtc_cron_is_valid_for_time_multi_or(const struct tm* tm_time, const lwdtc_cron_ctx_t* cron_ctx, size_t ctx_len) {
+    lwdtcr_t res = lwdtcERR;
+
+    ASSERT_PARAM(tm_time != NULL);
+    ASSERT_PARAM(cron_ctx != NULL);
+    ASSERT_PARAM(ctx_len > 0);
+
+    /* Multi-cron context version of lwdtc_cron_is_valid_for_time */
+    while (ctx_len-- > 0) {
+        if ((res = lwdtc_cron_is_valid_for_time(tm_time, cron_ctx++)) == lwdtcOK) {
+            return lwdtcOK;
+        }
+    }
+    return res;
+}
+
+/**
+ * \brief           Check if current time fits to all provided cron context arrays (AND operation)
+ * \param[in]       tm_time: Current time to check if cron works for it.
+ *                      Function assumes values in the structure are within valid boundaries
+ *                      and does not perform additional check
+ * \param[in]       cron_ctx: Pointer to array of cron ctx objects
+ * \param[in]       ctx_len: Number of context array length
+ * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise 
+ */
+lwdtcr_t
+lwdtc_cron_is_valid_for_time_multi_and(const struct tm* tm_time, const lwdtc_cron_ctx_t* cron_ctx, size_t ctx_len) {
+    lwdtcr_t res = lwdtcERR;
+
+    ASSERT_PARAM(tm_time != NULL);
+    ASSERT_PARAM(cron_ctx != NULL);
+    ASSERT_PARAM(ctx_len > 0);
+
+    /* Multi-cron context version of lwdtc_cron_is_valid_for_time */
+    while (ctx_len-- > 0) {
+        if ((res = lwdtc_cron_is_valid_for_time(tm_time, cron_ctx++)) != lwdtcOK) {
+            break;
+        }
+    }
+    return res;
+}
+
+/**
+ * \brief           Convert `struct tm` to \ref lwdtc_dt_t datetime structure
+ * \param[in]       tm_time: Datetime structure from `time.h` header to be converted
+ * \param[in]       dt: Datetime structure to write converted data to
  * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise 
  */
 lwdtcr_t
@@ -361,9 +432,9 @@ lwdtc_tm_to_dt(const struct tm* tm_time, lwdtc_dt_t* dt) {
 }
 
 /**
- * \brief           Convert lwdtc time structure to `struct tm` data type from `time.h` library
- * \param           dt: Datetime structure to write converted data
- * \param           tm_time: Datetime structure from `time.h` header to be converted
+ * \brief           Convert \ref lwdtc_dt_t datetime structure to `struct tm` data type from `time.h` library
+ * \param[in]       dt: Datetime structure to write converted data
+ * \param[in]       tm_time: Datetime structure from `time.h` header to be converted
  * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise 
  */
 lwdtcr_t

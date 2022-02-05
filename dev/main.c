@@ -18,7 +18,7 @@ print_bytes_string(const uint8_t* d, size_t btp) {
 }
 
 static void
-print_ctx(const lwdtc_cron_ctx_t* ctx) {
+print_cron_ctx(const lwdtc_cron_ctx_t* ctx) {
     printf("|103   96|95    88|87    80|79    72|71    64|63    56|55    48|47    40|39    32|31    24|23    16|15     8|7      0|\r\n");
     printf("||      |||      |||      |||      |||      |||      |||      |||      |||      |||      |||      |||      |||      ||\r\n");
     print_bytes_string(ctx->sec, sizeof(ctx->sec));
@@ -33,7 +33,7 @@ print_ctx(const lwdtc_cron_ctx_t* ctx) {
 const char* cron_tokens_list[] = {
     "* * * * * * *",                            /* Token is valid all the time, will fire every day */
     "0 * * * * * *",                            /* Token is valid at beginning of each minute (seconds == 0) */
-    "* * * * * 2 *",                            /* Fires every second each Tuesday */
+    "* * * * * 2 *",                            /* Fires every each Tuesday */
     "*/5 * * * * * *",                          /* Fires every 5 seconds */
     "*/5 */5 * * * * *",                        /* Fires each 5 seconds in a minute, every 5 minutes
                                                     (min:sec)
@@ -51,25 +51,32 @@ const char* cron_tokens_list[] = {
     "10 15 20 8 * 6 *",                         /* At 20:15:20 every Saturday that is also 8th day in Month (both must match, day saturday and date 8th) */
 };
 
+/* External examples */
+int cron_basic(void);
+int cron_dt_range(void);
+
 int
 main(void) {
-    lwdtc_cron_ctx_t ctx = {0};
+    lwdtc_cron_ctx_t cron_ctx = {0};
     lwdtc_dt_t dt;
     time_t rawtime, rawtime_old = 0;
     struct tm* timeinfo;
+
+    /* Run example */
+    cron_dt_range();
     
     for (size_t i = 0; i < (sizeof(cron_tokens_list) / sizeof(cron_tokens_list[0])); ++i) {
         lwdtcr_t res;
         printf("Parsing token: %s\r\n", cron_tokens_list[i]);
-        if ((res = lwdtc_cron_parse(&ctx, cron_tokens_list[i])) != lwdtcOK) {
-            lwdtc_cron_parse(&ctx, cron_tokens_list[i]);
+        if ((res = lwdtc_cron_parse(&cron_ctx, cron_tokens_list[i])) != lwdtcOK) {
+            lwdtc_cron_parse(&cron_ctx, cron_tokens_list[i]);
         }
         printf("Result (0 = OK, > 0 = KO): %d\r\n", (int)res);
-        print_ctx(&ctx);
+        print_cron_ctx(&cron_ctx);
         printf("----\r\n");
     }
 
-    lwdtc_cron_parse(&ctx, "*/2 * * * * * *");
+    lwdtc_cron_parse(&cron_ctx, "*/2 * * * * * *");
     while (1) {
         /* Get current time and react on changes only */
         time(&rawtime);
@@ -82,8 +89,7 @@ main(void) {
                 (int)timeinfo->tm_hour, (int)timeinfo->tm_min, (int)timeinfo->tm_sec
             );
 
-            lwdtc_tm_to_dt(timeinfo, &dt);
-            if (lwdtc_cron_is_valid_for_time(&ctx, &dt) == lwdtcOK) {
+            if (lwdtc_cron_is_valid_for_time(timeinfo, &cron_ctx) == lwdtcOK) {
                 /* Execute.. */
                 printf("Executing\r\n");
             }

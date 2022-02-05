@@ -34,11 +34,11 @@
 #ifndef LWDTC_HDR_H
 #define LWDTC_HDR_H
 
+#include "lwdtc/lwdtc_opt.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <limits.h>
 #include <time.h>
-#include "lwdtc/lwdtc_opt.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,6 +50,29 @@ extern "C" {
  * \{
  */
 
+/* Minimum and maximum values for each of the fields */
+#define LWDTC_SEC_MIN                           0   /*!< Minimum value for seconds field */
+#define LWDTC_SEC_MAX                           59  /*!< Maximum value for seconds field */
+#define LWDTC_MIN_MIN                           0   /*!< Minimum value for minutes field */
+#define LWDTC_MIN_MAX                           59  /*!< Maximum value for minutes field */
+#define LWDTC_HOUR_MIN                          0   /*!< Minimum value for hours field */
+#define LWDTC_HOUR_MAX                          23  /*!< Maximum value for hours field */
+#define LWDTC_MDAY_MIN                          1   /*!< Minimum value for day in month field */
+#define LWDTC_MDAY_MAX                          31  /*!< Maximum value for day in month field */
+#define LWDTC_MON_MIN                           1   /*!< Minimum value for month field */
+#define LWDTC_MON_MAX                           12  /*!< Maximum value for month field */
+#define LWDTC_WDAY_MIN                          0   /*!< Minimum value for week day field (min = Sunday, max = Saturday) */
+#define LWDTC_WDAY_MAX                          6   /*!< Maximum value for week day field (min = Sunday, max = Saturday) */
+#define LWDTC_YEAR_MIN                          0   /*!< Minimum value for year field */
+#define LWDTC_YEAR_MAX                          100 /*!< Maximum value for year field */
+
+/**
+ * \brief           Calculate size of statically allocated array
+ * \param[in]       x: Array
+ * \return          Number of elements
+ */
+#define LWDTC_ARRAYSIZE(x)              (sizeof(x) / sizeof((x)[0]))
+
 /**
  * \brief           Result enumeration
  */
@@ -59,22 +82,6 @@ typedef enum {
     lwdtcERRPAR,                                /*!< Invalid parameter */
     lwdtcERRTOKEN,                              /*!< Token value is not valid */
 } lwdtcr_t;
-
-/* Minimum and maximum values for each of the fields */
-#define LWDTC_SEC_MIN                           0
-#define LWDTC_SEC_MAX                           59
-#define LWDTC_MIN_MIN                           0
-#define LWDTC_MIN_MAX                           59
-#define LWDTC_HOUR_MIN                          0
-#define LWDTC_HOUR_MAX                          23
-#define LWDTC_MDAY_MIN                          1
-#define LWDTC_MDAY_MAX                          31
-#define LWDTC_MON_MIN                           1
-#define LWDTC_MON_MAX                           12
-#define LWDTC_WDAY_MIN                          0
-#define LWDTC_WDAY_MAX                          6
-#define LWDTC_YEAR_MIN                          0
-#define LWDTC_YEAR_MAX                          100
 
 /**
  * \brief           Cron context variable with parsed information
@@ -89,27 +96,31 @@ typedef struct {
     uint8_t hour[3];                            /*!< Hours field. Must support bits from 0 to 23 */
     uint8_t mday[4];                            /*!< Day number in a month. Must support bits from 0 to 30 */
     uint8_t mon[2];                             /*!< Month field. Must support bits from 0 to 11 */
-    uint8_t year[13];                           /*!< Year from 0 - 100, indicating 2000 - 2100. Must support bits 0 to 100 */
     uint8_t wday[1];                            /*!< Week day. Must support bits from 0 (Sunday) to 6 (Saturday) */
+    uint8_t year[13];                           /*!< Year from 0 - 100, indicating 2000 - 2100. Must support bits 0 to 100 */
 } lwdtc_cron_ctx_t;
 
 /**
- * \brief           Date and time structure
+ * \brief           Date and time structure of LwDTC library
  */
 typedef struct {
-    uint8_t sec;
-    uint8_t min;
-    uint8_t hour;
-    uint8_t mday;
-    uint8_t mon;
-    uint8_t year;
-    uint8_t wday;
+    uint8_t sec;                                /*!< Seconds in a minute. Value between \ref LWDTC_SEC_MIN and \ref LWDTC_SEC_MAX */
+    uint8_t min;                                /*!< Minutes in a hour. Value between \ref LWDTC_MIN_MIN and \ref LWDTC_MIN_MAX */
+    uint8_t hour;                               /*!< Hours in a day. Value between \ref LWDTC_HOUR_MIN and \ref LWDTC_HOUR_MAX */
+    uint8_t mday;                               /*!< Day in a month. Value between \ref LWDTC_MDAY_MIN and \ref LWDTC_MDAY_MAX */
+    uint8_t mon;                                /*!< Month in a year. Value between \ref LWDTC_MON_MIN and \ref LWDTC_MON_MAX */
+    uint8_t wday;                               /*!< Week day, between Sunday and Saturday. Value between \ref LWDTC_WDAY_MIN and \ref LWDTC_WDAY_MAX */
+    uint8_t year;                               /*!< Year, starting with `2000`. Value between \ref LWDTC_YEAR_MIN and \ref LWDTC_YEAR_MAX */
 } lwdtc_dt_t;
 
 lwdtcr_t    lwdtc_cron_parse_with_len(lwdtc_cron_ctx_t* ctx, const char* cron_str, size_t cron_str_len);
 lwdtcr_t    lwdtc_cron_parse(lwdtc_cron_ctx_t* ctx, const char* cron_str);
+lwdtcr_t    lwdtc_cron_parse_multi(lwdtc_cron_ctx_t* cron_ctx, const char** cron_strs, size_t ctx_len, size_t* fail_index);
 
-lwdtcr_t    lwdtc_cron_is_valid_for_time(const lwdtc_cron_ctx_t* cron_ctx, const lwdtc_dt_t* dt);
+lwdtcr_t    lwdtc_cron_is_valid_for_time(const struct tm* tm_time, const lwdtc_cron_ctx_t* cron_ctx);
+lwdtcr_t    lwdtc_cron_is_valid_for_time_multi_or(const struct tm* tm_time, const lwdtc_cron_ctx_t* cron_ctx, size_t ctx_len);
+lwdtcr_t    lwdtc_cron_is_valid_for_time_multi_and(const struct tm* tm_time, const lwdtc_cron_ctx_t* cron_ctx, size_t ctx_len);
+
 lwdtcr_t    lwdtc_tm_to_dt(const struct tm* tm_time, lwdtc_dt_t* dt);
 lwdtcr_t    lwdtc_dt_to_tm(const lwdtc_dt_t* dt, struct tm* tm_time);
 
