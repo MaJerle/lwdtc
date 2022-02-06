@@ -79,7 +79,7 @@ extern "C" {
 typedef enum {
     lwdtcOK = 0x00,                             /*!< Everything is OK */
     lwdtcERR,                                   /*!< Generic error */
-    lwdtcERRPAR,                                /*!< Invalid parameter */
+    lwdtcERRPAR,                                /*!< Invalid parameter passed to a function */
     lwdtcERRTOKEN,                              /*!< Token value is not valid */
 } lwdtcr_t;
 
@@ -102,15 +102,27 @@ typedef struct {
 
 /**
  * \brief           Date and time structure of LwDTC library
+ *
+ * Not used for the moment, but defined as placeholder for the future.
  */
 typedef struct {
-    uint8_t sec;                                /*!< Seconds in a minute. Value between \ref LWDTC_SEC_MIN and \ref LWDTC_SEC_MAX */
-    uint8_t min;                                /*!< Minutes in a hour. Value between \ref LWDTC_MIN_MIN and \ref LWDTC_MIN_MAX */
-    uint8_t hour;                               /*!< Hours in a day. Value between \ref LWDTC_HOUR_MIN and \ref LWDTC_HOUR_MAX */
-    uint8_t mday;                               /*!< Day in a month. Value between \ref LWDTC_MDAY_MIN and \ref LWDTC_MDAY_MAX */
-    uint8_t mon;                                /*!< Month in a year. Value between \ref LWDTC_MON_MIN and \ref LWDTC_MON_MAX */
-    uint8_t wday;                               /*!< Week day, between Sunday and Saturday. Value between \ref LWDTC_WDAY_MIN and \ref LWDTC_WDAY_MAX */
-    uint8_t year;                               /*!< Year, starting with `2000`. Value between \ref LWDTC_YEAR_MIN and \ref LWDTC_YEAR_MAX */
+    uint8_t sec;                                /*!< Seconds in a minute.
+                                                        Value between \ref LWDTC_SEC_MIN and \ref LWDTC_SEC_MAX */
+    uint8_t min;                                /*!< Minutes in a hour.
+                                                        Value between \ref LWDTC_MIN_MIN and \ref LWDTC_MIN_MAX */
+    uint8_t hour;                               /*!< Hours in a day.
+                                                        Value between \ref LWDTC_HOUR_MIN and \ref LWDTC_HOUR_MAX */
+    uint8_t mday;                               /*!< Day in a month.
+                                                        Value between \ref LWDTC_MDAY_MIN and \ref LWDTC_MDAY_MAX */
+    uint8_t mon;                                /*!< Month in a year.
+                                                        Value between \ref LWDTC_MON_MIN and \ref LWDTC_MON_MAX */
+    uint8_t wday;                               /*!< Week day, between Sunday and Saturday.
+                                                        Value between \ref LWDTC_WDAY_MIN and \ref LWDTC_WDAY_MAX */
+    uint8_t year;                               /*!< Year, starting with `2000`.
+                                                        Value between \ref LWDTC_YEAR_MIN and \ref LWDTC_YEAR_MAX
+                                                   \note This is different versus `struct tm` from `time.h` library, where years
+                                                         start from `1900`, hence year `2022` is written as `122` in `struct tm`,
+                                                         while same year is set as `22` this field */
 } lwdtc_dt_t;
 
 lwdtcr_t    lwdtc_cron_parse_with_len(lwdtc_cron_ctx_t* ctx, const char* cron_str, size_t cron_str_len);
