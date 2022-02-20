@@ -52,8 +52,9 @@ const char* cron_tokens_list[] = {
 };
 
 /* External examples */
-int cron_basic(void);
-int cron_dt_range(void);
+extern int cron_basic(void);
+extern int cron_dt_range(void);
+extern int cron_calc_range(void);
 
 int
 main(void) {
@@ -61,6 +62,9 @@ main(void) {
     lwdtc_dt_t dt;
     time_t rawtime, rawtime_old = 0;
     struct tm* timeinfo;
+
+    /* Range calculation */
+    cron_calc_range();
 
     /* Run example */
     cron_dt_range();
