@@ -22,6 +22,7 @@ target_sources(${PROJECT_NAME} PUBLIC
 
     # Examples
     ${CMAKE_CURRENT_LIST_DIR}/examples/cron_basic.c
+    ${CMAKE_CURRENT_LIST_DIR}/examples/cron_multi.c
     ${CMAKE_CURRENT_LIST_DIR}/examples/cron_calc_range.c
     ${CMAKE_CURRENT_LIST_DIR}/examples/cron_dt_range.c
     )

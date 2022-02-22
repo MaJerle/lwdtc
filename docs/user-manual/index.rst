@@ -8,4 +8,5 @@ User manual
 
     cron
     cron-basic-schedule
+    cron-multi-schedule
     cron-dt-range

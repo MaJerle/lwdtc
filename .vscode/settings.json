@@ -4,5 +4,6 @@
         "string.h": "c",
         "time.h": "c",
         "windows.h": "c"
-    }
+    },
+    "restructuredtext.confPath": "${workspaceFolder}\\docs"
 }

@@ -53,6 +53,7 @@ const char* cron_tokens_list[] = {
 
 /* External examples */
 extern int cron_basic(void);
+extern int cron_multi(void);
 extern int cron_dt_range(void);
 extern int cron_calc_range(void);
 
@@ -62,6 +63,9 @@ main(void) {
     lwdtc_dt_t dt;
     time_t rawtime, rawtime_old = 0;
     struct tm* timeinfo;
+
+    /* Run different examples */
+    cron_multi();
 
     /* Range calculation */
     cron_calc_range();
