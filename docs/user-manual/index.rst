@@ -7,4 +7,5 @@ User manual
     :maxdepth: 2
 
     cron
+    cron-basic-schedule
     cron-dt-range
