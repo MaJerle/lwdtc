@@ -73,7 +73,7 @@ main(void) {
     /* Run example */
     cron_dt_range();
     
-    for (size_t i = 0; i < (sizeof(cron_tokens_list) / sizeof(cron_tokens_list[0])); ++i) {
+    for (size_t i = 0; i < LWDTC_ARRAYSIZE(cron_tokens_list); ++i) {
         lwdtcr_t res;
         printf("Parsing token: %s\r\n", cron_tokens_list[i]);
         if ((res = lwdtc_cron_parse(&cron_ctx, cron_tokens_list[i])) != lwdtcOK) {
