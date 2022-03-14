@@ -282,10 +282,7 @@ lwdtc_cron_parse_with_len(lwdtc_cron_ctx_t* ctx, const char* cron_str, size_t cr
     prv_cron_parser_ctx_t parser = {0};
     lwdtcr_t res;
 
-    /* Verify all parameters */
-    ASSERT_PARAM(ctx != NULL);
-    ASSERT_PARAM(cron_str != NULL);
-    ASSERT_PARAM(cron_str_len > 0);
+    ASSERT_PARAM(ctx != NULL && cron_str != NULL && cron_str_len > 0);
     memset(ctx, 0x00, sizeof(*ctx));            /* Reset structure */
 
     /* Setup parser */
@@ -371,11 +368,9 @@ lwdtc_cron_parse(lwdtc_cron_ctx_t* ctx, const char* cron_str) {
  */
 lwdtcr_t
 lwdtc_cron_parse_multi(lwdtc_cron_ctx_t* cron_ctx, const char** cron_strs, size_t ctx_len, size_t* fail_index) {
-    lwdtcr_t res;
+    lwdtcr_t res = lwdtcERR;
 
-    ASSERT_PARAM(cron_ctx != NULL);
-    ASSERT_PARAM(cron_strs != NULL);
-    ASSERT_PARAM(ctx_len > 0);
+    ASSERT_PARAM(cron_ctx != NULL && cron_strs != NULL && ctx_len > 0);
 
     /* Parse all input strings, each to its own cron context structure */
     for (size_t i = 0; i < ctx_len; ++i) {
@@ -401,9 +396,8 @@ lwdtc_cron_parse_multi(lwdtc_cron_ctx_t* cron_ctx, const char** cron_strs, size_
 lwdtcr_t
 lwdtc_cron_is_valid_for_time(const struct tm* tm_time, const lwdtc_cron_ctx_t* cron_ctx) {
     lwdtcr_t res = lwdtcOK;
-
-    ASSERT_PARAM(tm_time != NULL);
-    ASSERT_PARAM(cron_ctx != NULL);
+    
+    ASSERT_PARAM(tm_time != NULL && cron_ctx != NULL);
 
     /* 
      * Cron is valid only if all values are a pass
@@ -437,11 +431,9 @@ lwdtc_cron_is_valid_for_time(const struct tm* tm_time, const lwdtc_cron_ctx_t* c
  */
 lwdtcr_t
 lwdtc_cron_is_valid_for_time_multi_or(const struct tm* tm_time, const lwdtc_cron_ctx_t* cron_ctx, size_t ctx_len) {
-    lwdtcr_t res;
+    lwdtcr_t res = lwdtcERR;
 
-    ASSERT_PARAM(tm_time != NULL);
-    ASSERT_PARAM(cron_ctx != NULL);
-    ASSERT_PARAM(ctx_len > 0);
+    ASSERT_PARAM(cron_ctx != NULL && tm_time != NULL && ctx_len > 0);
 
     /* Multi-cron context version of lwdtc_cron_is_valid_for_time */
     while (ctx_len-- > 0) {
@@ -463,11 +455,9 @@ lwdtc_cron_is_valid_for_time_multi_or(const struct tm* tm_time, const lwdtc_cron
  */
 lwdtcr_t
 lwdtc_cron_is_valid_for_time_multi_and(const struct tm* tm_time, const lwdtc_cron_ctx_t* cron_ctx, size_t ctx_len) {
-    lwdtcr_t res;
+    lwdtcr_t res = lwdtcERR;
 
-    ASSERT_PARAM(tm_time != NULL);
-    ASSERT_PARAM(cron_ctx != NULL);
-    ASSERT_PARAM(ctx_len > 0);
+    ASSERT_PARAM(cron_ctx != NULL && tm_time != NULL && ctx_len > 0);
 
     /* Multi-cron context version of lwdtc_cron_is_valid_for_time */
     while (ctx_len-- > 0) {
@@ -486,8 +476,7 @@ lwdtc_cron_is_valid_for_time_multi_and(const struct tm* tm_time, const lwdtc_cro
  */
 lwdtcr_t
 lwdtc_tm_to_dt(const struct tm* tm_time, lwdtc_dt_t* dt) {
-    ASSERT_PARAM(tm_time != NULL);
-    ASSERT_PARAM(dt != NULL);
+    ASSERT_PARAM(tm_time != NULL && dt != NULL);
 
     dt->sec = tm_time->tm_sec;
     dt->min = tm_time->tm_min;

@@ -2,4 +2,4 @@
 
 ## Develop
 
-- First commit
+- Rework parameters to avoid ARM GCC warnings for uninitialized var
