@@ -49,6 +49,9 @@ const char* cron_tokens_list[] = {
     "0 0 0 1 */3 * *",                          /* Every beginning of the quarter, every first day in a month in every 3rd month at 00:00:00 */
     "10 15 20 * 8 6 *",                         /* At 20:15:20 every Saturday in August */
     "10 15 20 8 * 6 *",                         /* At 20:15:20 every Saturday that is also 8th day in Month (both must match, day saturday and date 8th) */
+
+    "49-47 * * * * * *",                        /* All seconds in minute except second 48 */
+    "49-07/3 * * * * * *",                      /* Every third second from 49 to 07 (49, 52, 55, 58, 01, 04, 07) */
 };
 
 /* External examples */
@@ -65,13 +68,13 @@ main(void) {
     struct tm* timeinfo;
 
     /* Run different examples */
-    cron_multi();
+    //cron_multi();
 
     /* Range calculation */
-    cron_calc_range();
+    //cron_calc_range();
 
     /* Run example */
-    cron_dt_range();
+    //cron_dt_range();
     
     for (size_t i = 0; i < LWDTC_ARRAYSIZE(cron_tokens_list); ++i) {
         lwdtcr_t res;
@@ -83,6 +86,7 @@ main(void) {
         print_cron_ctx(&cron_ctx);
         printf("----\r\n");
     }
+    return 0;
 
     lwdtc_cron_parse(&cron_ctx, "*/2 * * * * * *");
     while (1) {

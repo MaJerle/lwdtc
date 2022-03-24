@@ -132,7 +132,7 @@ prv_get_next_token(prv_cron_parser_ctx_t* parser) {
 static lwdtcr_t
 prv_get_and_parse_next_token(prv_cron_parser_ctx_t* parser, uint8_t* bit_map, size_t val_min, size_t val_max) {
     size_t i = 0, bit_start_pos, bit_end_pos, bit_step;
-    uint8_t is_range;
+    uint8_t is_range, is_opposite;
 
     /* Get next token from string */
     ASSERT_ACTION(prv_get_next_token(parser) == lwdtcOK);
@@ -147,6 +147,7 @@ prv_get_and_parse_next_token(prv_cron_parser_ctx_t* parser, uint8_t* bit_map, si
         bit_end_pos = SIZE_MAX;
         bit_step = 1;
         is_range = 0;
+        is_opposite = 0;
         
         ASSERT_ACTION(i < parser->new_token_len);   /* Check token length */
 
@@ -166,6 +167,8 @@ prv_get_and_parse_next_token(prv_cron_parser_ctx_t* parser, uint8_t* bit_map, si
          * - "num": Fixed number, min and max values are the same, step is 1
          * - "min-max": Range value, min and max are defined by numbers, step is 1
          * - "min-max/step": Range value with min and max, step defined by number
+         * - "max-min": Range value, from max to the end of possible field and from 0 to the min value
+         * - "max-min/step": Range value, from max to the end of possible field and from 0 to the min value, step defined by number
          * - "*": All values between possible minimum and maximum
          * - "* /step": All values between possible minimum and maximum for specific field,
          *          step defined by number
@@ -210,6 +213,15 @@ prv_get_and_parse_next_token(prv_cron_parser_ctx_t* parser, uint8_t* bit_map, si
             ASSERT_TOKEN_VALID(prv_parse_num(&parser->new_token[i], parser->new_token_len - i, &i, &bit_end_pos) == lwdtcOK);
 
             /* Stop bit must be always higher or equal than start bit */
+            if (bit_start_pos > bit_end_pos) {
+                size_t tmp = bit_end_pos;
+                
+                /* Change start and stop values */
+                bit_end_pos = bit_start_pos;
+                bit_start_pos = tmp;
+                /* Mark it as opposite direction */
+                is_opposite = 1;
+            }
             ASSERT_TOKEN_VALID(bit_end_pos >= bit_start_pos);
             is_range = 1;
         }
@@ -250,12 +262,25 @@ prv_get_and_parse_next_token(prv_cron_parser_ctx_t* parser, uint8_t* bit_map, si
             bit_end_pos = val_max;
         }
 
-        LWDTC_DEBUG("bit_start_pos: %u, bit_end_pos: %u, bit_step: %u\r\n",
-                    (unsigned)bit_start_pos, (unsigned)bit_end_pos, (unsigned)bit_step);
+        LWDTC_DEBUG("bit_start_pos: %u, bit_end_pos: %u, bit_step: %u, is_opposite: %u\r\n",
+                    (unsigned)bit_start_pos, (unsigned)bit_end_pos, (unsigned)bit_step, (unsigned)is_opposite);
 
-        /* Set bits in map */
-        for (size_t bit = bit_start_pos; bit <= bit_end_pos; bit += bit_step) {
-            BIT_SET(bit_map, bit);
+        if (is_opposite) {
+            size_t bit;
+            
+            /* Set bits in map from stop to the end value and from beginning to start value */
+            for (bit = bit_end_pos; bit <= val_max; bit += bit_step) {
+                BIT_SET(bit_map, bit);
+            }
+            /* We start at the multiplier of bit_step value */
+            for (bit = bit % bit_step + val_min; bit <= bit_start_pos; bit += bit_step) {
+                BIT_SET(bit_map, bit);
+            }
+        } else {   
+            /* Set bits in map from start to end */
+            for (size_t bit = bit_start_pos; bit <= bit_end_pos; bit += bit_step) {
+                BIT_SET(bit_map, bit);
+            }
         }
 
         /* If we are not at the end, character must be comma */

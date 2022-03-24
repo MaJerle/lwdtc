@@ -18,7 +18,7 @@ Supported characters
 
 - Numbers between minimum and maximum value for each of date and time field
 - Support for ``seconds``, ``minutes``, ``hours``, ``day-in-month``, ``month``, ``day-in-week`` and ``year``,
-- ``-`` is used to define value range, with min and max boundaries
+- ``-`` is used to define value range, with min and max boundaries, ``min-max`` or ``max-min``
 - ``,`` is used to specifc multiple fixed values
 - ``/`` is used to define step between min and max values
 - ``*`` is used to represend *any* value
@@ -82,6 +82,8 @@ This section provides list of some CRON examples in its default configuration.
 | ``30-45/3 * * * * * *`` | Every ``3rd`` second in every minute, when seconds are between ``30`` and ``45`` |
 +-------------------------+----------------------------------------------------------------------------------+
 | ``0 23/1 * * * * *``    | Every beginning of a minute when minute is between ``23`` and ``59``             |
++-------------------------+----------------------------------------------------------------------------------+
+| ``50-10 * * * * * *``   | Every second when seconds are from ``50-59`` and ``00-10`` (overflow mode)       |
 +-------------------------+----------------------------------------------------------------------------------+
 
 .. literalinclude:: ../../examples/cron_basic.c
