@@ -1,9 +1,10 @@
 {
     "files.associations": {
-        "lwdtc.h": "c",
+        "lwevt_types.h": "c",
+        "lwevt_type.h": "c",
+        "lwevt.h": "c",
         "string.h": "c",
-        "time.h": "c",
-        "windows.h": "c"
+        "lwevt_opt.h": "c"
     },
-    "restructuredtext.confPath": "${workspaceFolder}\\docs"
+    "esbonio.sphinx.confDir": ""
 }
