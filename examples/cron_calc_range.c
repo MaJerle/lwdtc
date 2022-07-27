@@ -30,7 +30,10 @@ cron_calc_range(void) {
     };
 
     /* TODO: Implement algorithm to calculate all necessary cron entries representing time range */
-
+    (void)cron_ctxs;
+    (void)cron_ctxs_len;
+    (void)start;
+    (void)end;
     
     return 1;
 }

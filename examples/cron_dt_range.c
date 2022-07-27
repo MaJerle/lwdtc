@@ -29,7 +29,7 @@ cron_dt_range(void) {
     /* Parse all CRON strings */
     for (size_t i = 0; i < LWDTC_ARRAYSIZE(cron_strings); ++i) {
         if (lwdtc_cron_parse(&cron_ctx[i], cron_strings[i]) != lwdtcOK) {
-            printf("Could not parse CRON: %d\r\n", cron_strings[i]);
+            printf("Could not parse CRON: %s\r\n", cron_strings[i]);
             while (1) {}
         }
     }

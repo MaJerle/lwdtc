@@ -75,6 +75,8 @@ main(void) {
 
     /* Run example */
     //cron_dt_range();
+
+    (void)dt;
     
     for (size_t i = 0; i < LWDTC_ARRAYSIZE(cron_tokens_list); ++i) {
         lwdtcr_t res;

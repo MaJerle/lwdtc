@@ -25,12 +25,12 @@ target_sources(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/examples/cron_multi.c
     ${CMAKE_CURRENT_LIST_DIR}/examples/cron_calc_range.c
     ${CMAKE_CURRENT_LIST_DIR}/examples/cron_dt_range.c
-    )
+)
 
 # Add key include paths
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/dev
-    )
+)
 
 # Compilation definition information
 target_compile_definitions(${PROJECT_NAME} PUBLIC
@@ -38,7 +38,14 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
     _DEBUG
     CONSOLE
     LWDTC_DEV
-    )
+)
+
+# Compiler options
+target_compile_options(${PROJECT_NAME} PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+)
 
 # Add subdir with lwdtc and link to project
 add_subdirectory("lwdtc" lwdtc)
