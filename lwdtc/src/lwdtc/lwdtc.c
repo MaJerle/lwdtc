@@ -31,41 +31,50 @@
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
  * Version:         $_version_$
  */
-#include <string.h>
 #include <stdint.h>
+#include <string.h>
 #include "lwdtc/lwdtc.h"
 
 #if defined(LWDTC_DEV)
 #include <stdio.h>
-#define LWDTC_DEBUG(...)                    printf(__VA_ARGS__)
+#define LWDTC_DEBUG(...) printf(__VA_ARGS__)
 #else
 #define LWDTC_DEBUG(...)
 #endif /* defined(LWDTC_DEV) */
 
 /* Internal defines */
-#define ASSERT_PARAM(c)                     if (!(c)) { return lwdtcERRPAR; }
-#define ASSERT_TOKEN_VALID(c)               if (!(c)) { return lwdtcERRTOKEN; }
-#define ASSERT_ACTION(c)                    if (!(c)) { return lwdtcERR; }
+#define ASSERT_PARAM(c)                                                                                                \
+    if (!(c)) {                                                                                                        \
+        return lwdtcERRPAR;                                                                                            \
+    }
+#define ASSERT_TOKEN_VALID(c)                                                                                          \
+    if (!(c)) {                                                                                                        \
+        return lwdtcERRTOKEN;                                                                                          \
+    }
+#define ASSERT_ACTION(c)                                                                                               \
+    if (!(c)) {                                                                                                        \
+        return lwdtcERR;                                                                                               \
+    }
 
-#define CHAR_IS_NUM(c)                      ((c) >= '0' && (c) <= '9')
-#define CHAR_TO_NUM(c)                      ((c) - '0')
+#define CHAR_IS_NUM(c)       ((c) >= '0' && (c) <= '9')
+#define CHAR_TO_NUM(c)       ((c) - '0')
 
-#define BIT_IS_SET(map, pos)                ((map)[(pos) >> 3] & (1 << ((pos) & 0x07)))
-#define BIT_SET(map, pos)                   (map)[(pos) >> 3] |= (1 << ((pos) & 0x07))
+#define BIT_IS_SET(map, pos) ((map)[(pos) >> 3] & (1 << ((pos)&0x07)))
+#define BIT_SET(map, pos)    (map)[(pos) >> 3] |= (1 << ((pos)&0x07))
 
 /**
  * \brief           Private structure to parse cron input
  */
 typedef struct {
-    lwdtc_cron_ctx_t* ctx;                      /*!< Cron parser context pointer */
+    lwdtc_cron_ctx_t* ctx; /*!< Cron parser context pointer */
 
     /* Token input to be filled at the beginning */
-    const char* cron_str;                       /*!< Original cron string start p, later modified by parser on each token */
-    size_t cron_str_len;                        /*!< Initial cron string length */
+    const char* cron_str; /*!< Original cron string start p, later modified by parser on each token */
+    size_t cron_str_len;  /*!< Initial cron string length */
 
     /* Generated token for particular field */
-    const char* new_token;                      /*!< Start of new parsed token */
-    size_t new_token_len;                       /*!< Length of new parsed token */
+    const char* new_token; /*!< Start of new parsed token */
+    size_t new_token_len;  /*!< Length of new parsed token */
 } prv_cron_parser_ctx_t;
 
 /**
@@ -109,14 +118,16 @@ prv_get_next_token(prv_cron_parser_ctx_t* parser) {
     if (len == 0 || s == NULL || *s == '\0') {
         return lwdtcERRTOKEN;
     }
-    parser->new_token = s;                      /* Set start of the token */
+    parser->new_token = s; /* Set start of the token */
 
     /* Search for the end of token */
-    for (; len > 0 && s != NULL && *s != ' ' && *s != '\0'; ++s, --len);
-    parser->new_token_len = s - parser->new_token;  /* Get token length */
+    for (; len > 0 && s != NULL && *s != ' ' && *s != '\0'; ++s, --len) {
+        ;
+    }
+    parser->new_token_len = s - parser->new_token; /* Get token length */
 
-    parser->cron_str = s;                       /* Set position where next token is about to start (with leading spaces) */
-    parser->cron_str_len = len;                 /* Set remaining length of the input string */
+    parser->cron_str = s;       /* Set position where next token is about to start (with leading spaces) */
+    parser->cron_str_len = len; /* Set remaining length of the input string */
     return lwdtcOK;
 }
 
@@ -148,8 +159,8 @@ prv_get_and_parse_next_token(prv_cron_parser_ctx_t* parser, uint8_t* bit_map, si
         bit_step = 1;
         is_range = 0;
         is_opposite = 0;
-        
-        ASSERT_ACTION(i < parser->new_token_len);   /* Check token length */
+
+        ASSERT_ACTION(i < parser->new_token_len); /* Check token length */
 
         /*
          * Token starts with one of 2 possible values:
@@ -195,7 +206,8 @@ prv_get_and_parse_next_token(prv_cron_parser_ctx_t* parser, uint8_t* bit_map, si
              * Since we don't know yet what is following after the number,
              * parse the number and set start and end bits to the same value
              */
-            ASSERT_TOKEN_VALID(prv_parse_num(&parser->new_token[i], parser->new_token_len - i, &i, &bit_start_pos) == lwdtcOK);
+            ASSERT_TOKEN_VALID(prv_parse_num(&parser->new_token[i], parser->new_token_len - i, &i, &bit_start_pos)
+                               == lwdtcOK);
             bit_end_pos = bit_start_pos;
         }
 
@@ -210,12 +222,13 @@ prv_get_and_parse_next_token(prv_cron_parser_ctx_t* parser, uint8_t* bit_map, si
 
             /* Parse second part of range */
             ASSERT_ACTION(i < parser->new_token_len);
-            ASSERT_TOKEN_VALID(prv_parse_num(&parser->new_token[i], parser->new_token_len - i, &i, &bit_end_pos) == lwdtcOK);
+            ASSERT_TOKEN_VALID(prv_parse_num(&parser->new_token[i], parser->new_token_len - i, &i, &bit_end_pos)
+                               == lwdtcOK);
 
             /* Stop bit must be always higher or equal than start bit */
             if (bit_start_pos > bit_end_pos) {
                 size_t tmp = bit_end_pos;
-                
+
                 /* Change start and stop values */
                 bit_end_pos = bit_start_pos;
                 bit_start_pos = tmp;
@@ -235,8 +248,9 @@ prv_get_and_parse_next_token(prv_cron_parser_ctx_t* parser, uint8_t* bit_map, si
          */
         if (i < parser->new_token_len && parser->new_token[i] == '/') {
             ++i;
-            ASSERT_TOKEN_VALID(prv_parse_num(&parser->new_token[i], parser->new_token_len - i, &i, &bit_step) == lwdtcOK);
-            
+            ASSERT_TOKEN_VALID(prv_parse_num(&parser->new_token[i], parser->new_token_len - i, &i, &bit_step)
+                               == lwdtcOK);
+
             /*
              * If user did not specify range (min-max) values,
              * then all bits to the end of value are valid.
@@ -262,12 +276,12 @@ prv_get_and_parse_next_token(prv_cron_parser_ctx_t* parser, uint8_t* bit_map, si
             bit_end_pos = val_max;
         }
 
-        LWDTC_DEBUG("bit_start_pos: %u, bit_end_pos: %u, bit_step: %u, is_opposite: %u\r\n",
-                    (unsigned)bit_start_pos, (unsigned)bit_end_pos, (unsigned)bit_step, (unsigned)is_opposite);
+        LWDTC_DEBUG("bit_start_pos: %u, bit_end_pos: %u, bit_step: %u, is_opposite: %u\r\n", (unsigned)bit_start_pos,
+                    (unsigned)bit_end_pos, (unsigned)bit_step, (unsigned)is_opposite);
 
         if (is_opposite) {
             size_t bit;
-            
+
             /* Set bits in map from stop to the end value and from beginning to start value */
             for (bit = bit_end_pos; bit <= val_max; bit += bit_step) {
                 BIT_SET(bit_map, bit);
@@ -276,7 +290,7 @@ prv_get_and_parse_next_token(prv_cron_parser_ctx_t* parser, uint8_t* bit_map, si
             for (bit = bit % bit_step + val_min; bit <= bit_start_pos; bit += bit_step) {
                 BIT_SET(bit_map, bit);
             }
-        } else {   
+        } else {
             /* Set bits in map from start to end */
             for (size_t bit = bit_start_pos; bit <= bit_end_pos; bit += bit_step) {
                 BIT_SET(bit_map, bit);
@@ -289,7 +303,7 @@ prv_get_and_parse_next_token(prv_cron_parser_ctx_t* parser, uint8_t* bit_map, si
         } else if (parser->new_token[i] != ',') {
             return lwdtcERRTOKEN;
         }
-    } while (parser->new_token[i++] == ',');    /* Could be replaced by (1) */
+    } while (parser->new_token[i++] == ','); /* Could be replaced by (1) */
     return lwdtcOK;
 }
 
@@ -308,7 +322,7 @@ lwdtc_cron_parse_with_len(lwdtc_cron_ctx_t* ctx, const char* cron_str, size_t cr
     lwdtcr_t res;
 
     ASSERT_PARAM(ctx != NULL && cron_str != NULL && cron_str_len > 0);
-    memset(ctx, 0x00, sizeof(*ctx));            /* Reset structure */
+    memset(ctx, 0x00, sizeof(*ctx)); /* Reset structure */
 
     /* Setup parser */
     parser.ctx = ctx;
@@ -322,49 +336,45 @@ lwdtc_cron_parse_with_len(lwdtc_cron_ctx_t* ctx, const char* cron_str, size_t cr
      * or parse function will immediately return with error
      */
 
-#define ASSERT_GET_PARSE_TOKEN(func_call)       if ((res = (func_call)) != lwdtcOK) { return res; }
+#define ASSERT_GET_PARSE_TOKEN(func_call)                                                                              \
+    if ((res = (func_call)) != lwdtcOK) {                                                                              \
+        return res;                                                                                                    \
+    }
 
     /* Parse seconds field */
     ASSERT_GET_PARSE_TOKEN(prv_get_and_parse_next_token(&parser, ctx->sec, LWDTC_SEC_MIN, LWDTC_SEC_MAX));
-    LWDTC_DEBUG("Seconds token: len: %d, token: %.*s, rem_len: %d\r\n",
-                (int)parser.new_token_len, (int)parser.new_token_len,
-                parser.new_token, (int)parser.cron_str_len);
+    LWDTC_DEBUG("Seconds token: len: %d, token: %.*s, rem_len: %d\r\n", (int)parser.new_token_len,
+                (int)parser.new_token_len, parser.new_token, (int)parser.cron_str_len);
 
     /* Parse minutes field */
     ASSERT_GET_PARSE_TOKEN(prv_get_and_parse_next_token(&parser, ctx->min, LWDTC_MIN_MIN, LWDTC_MIN_MAX));
-    LWDTC_DEBUG("Minutes token: len: %d, token: %.*s, rem_len: %d\r\n",
-            (int)parser.new_token_len, (int)parser.new_token_len,
-            parser.new_token, (int)parser.cron_str_len);
+    LWDTC_DEBUG("Minutes token: len: %d, token: %.*s, rem_len: %d\r\n", (int)parser.new_token_len,
+                (int)parser.new_token_len, parser.new_token, (int)parser.cron_str_len);
 
     /* Parse hours field */
     ASSERT_GET_PARSE_TOKEN(prv_get_and_parse_next_token(&parser, ctx->hour, LWDTC_HOUR_MIN, LWDTC_HOUR_MAX));
-    LWDTC_DEBUG("Hours token: len: %d, token: %.*s, rem_len: %d\r\n",
-            (int)parser.new_token_len, (int)parser.new_token_len,
-            parser.new_token, (int)parser.cron_str_len);
+    LWDTC_DEBUG("Hours token: len: %d, token: %.*s, rem_len: %d\r\n", (int)parser.new_token_len,
+                (int)parser.new_token_len, parser.new_token, (int)parser.cron_str_len);
 
     /* Parse day in month field */
     ASSERT_GET_PARSE_TOKEN(prv_get_and_parse_next_token(&parser, ctx->mday, LWDTC_MDAY_MIN, LWDTC_MDAY_MAX));
-    LWDTC_DEBUG("Mday token: len: %d, token: %.*s, rem_len: %d\r\n",
-            (int)parser.new_token_len, (int)parser.new_token_len,
-            parser.new_token, (int)parser.cron_str_len);
+    LWDTC_DEBUG("Mday token: len: %d, token: %.*s, rem_len: %d\r\n", (int)parser.new_token_len,
+                (int)parser.new_token_len, parser.new_token, (int)parser.cron_str_len);
 
     /* Parse month field */
     ASSERT_GET_PARSE_TOKEN(prv_get_and_parse_next_token(&parser, ctx->mon, LWDTC_MON_MIN, LWDTC_MON_MAX));
-    LWDTC_DEBUG("Month token: len: %d, token: %.*s, rem_len: %d\r\n",
-            (int)parser.new_token_len, (int)parser.new_token_len,
-            parser.new_token, (int)parser.cron_str_len);
+    LWDTC_DEBUG("Month token: len: %d, token: %.*s, rem_len: %d\r\n", (int)parser.new_token_len,
+                (int)parser.new_token_len, parser.new_token, (int)parser.cron_str_len);
 
     /* Parse day in a week field */
     ASSERT_GET_PARSE_TOKEN(prv_get_and_parse_next_token(&parser, ctx->wday, LWDTC_WDAY_MIN, LWDTC_WDAY_MAX));
-    LWDTC_DEBUG("Weekday token: len: %d, token: %.*s, rem_len: %d\r\n",
-            (int)parser.new_token_len, (int)parser.new_token_len,
-            parser.new_token, (int)parser.cron_str_len);
+    LWDTC_DEBUG("Weekday token: len: %d, token: %.*s, rem_len: %d\r\n", (int)parser.new_token_len,
+                (int)parser.new_token_len, parser.new_token, (int)parser.cron_str_len);
 
     /* Parse year field */
     ASSERT_GET_PARSE_TOKEN(prv_get_and_parse_next_token(&parser, ctx->year, LWDTC_YEAR_MIN, LWDTC_YEAR_MAX));
-    LWDTC_DEBUG("Year token: len: %d, token: %.*s, rem_len: %d\r\n",
-            (int)parser.new_token_len, (int)parser.new_token_len,
-            parser.new_token, (int)parser.cron_str_len);
+    LWDTC_DEBUG("Year token: len: %d, token: %.*s, rem_len: %d\r\n", (int)parser.new_token_len,
+                (int)parser.new_token_len, parser.new_token, (int)parser.cron_str_len);
     return res;
 }
 
@@ -421,7 +431,7 @@ lwdtc_cron_parse_multi(lwdtc_cron_ctx_t* cron_ctx, const char** cron_strs, size_
 lwdtcr_t
 lwdtc_cron_is_valid_for_time(const struct tm* tm_time, const lwdtc_cron_ctx_t* cron_ctx) {
     lwdtcr_t res = lwdtcOK;
-    
+
     ASSERT_PARAM(tm_time != NULL && cron_ctx != NULL);
 
     /* 
@@ -433,12 +443,9 @@ lwdtc_cron_is_valid_for_time(const struct tm* tm_time, const lwdtc_cron_ctx_t* c
      * 
      * Our cron is a valid when bitwise AND-ed between all fields is a pass
      */
-    if (!BIT_IS_SET(cron_ctx->sec, tm_time->tm_sec)
-        || !BIT_IS_SET(cron_ctx->min, tm_time->tm_min)
-        || !BIT_IS_SET(cron_ctx->hour, tm_time->tm_hour)
-        || !BIT_IS_SET(cron_ctx->mday, tm_time->tm_mday)
-        || !BIT_IS_SET(cron_ctx->mon, tm_time->tm_mon)
-        || !BIT_IS_SET(cron_ctx->wday, tm_time->tm_wday)
+    if (!BIT_IS_SET(cron_ctx->sec, tm_time->tm_sec) || !BIT_IS_SET(cron_ctx->min, tm_time->tm_min)
+        || !BIT_IS_SET(cron_ctx->hour, tm_time->tm_hour) || !BIT_IS_SET(cron_ctx->mday, tm_time->tm_mday)
+        || !BIT_IS_SET(cron_ctx->mon, tm_time->tm_mon) || !BIT_IS_SET(cron_ctx->wday, tm_time->tm_wday)
         || !BIT_IS_SET(cron_ctx->year, (tm_time->tm_year - 100))) {
         res = lwdtcERR;
     }
