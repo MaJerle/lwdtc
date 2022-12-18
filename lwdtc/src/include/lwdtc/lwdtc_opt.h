@@ -31,8 +31,8 @@
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
  * Version:         $_version_$
  */
-#ifndef LWDTC_HDR_OPT_H
-#define LWDTC_HDR_OPT_H
+#ifndef LWDTC_OPT_HDR_H
+#define LWDTC_OPT_HDR_H
 
 /* Uncomment to ignore user options (or set macro in compiler flags) */
 /* #define LWDTC_IGNORE_USER_OPTS */
@@ -60,4 +60,4 @@ extern "C" {
 }
 #endif /* __cplusplus */
 
-#endif /* LWDTC_HDR_OPT_H */
+#endif /* LWDTC_OPT_HDR_H */
