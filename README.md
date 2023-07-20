@@ -6,7 +6,7 @@ Platform independent Date, Time & Cron Utility library
 
 ## Features
 
-* Written in ANSI C99
+* Written in C (C11)
 * Platform independent, easy to use
 * Support for date, time and cron utilities
 * Ultra-lightweight cron library for embedded systems
