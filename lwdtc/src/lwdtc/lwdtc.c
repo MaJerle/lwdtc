@@ -269,7 +269,7 @@ prv_get_and_parse_next_token(prv_cron_parser_ctx_t* parser, uint8_t* bit_map, si
         }
         if (bit_end_pos > val_max) {
             /* Full value indicates complete range, perform manual strip */
-            if (bit_end_pos != (size_t)-1) {
+            if (bit_end_pos != SIZE_MAX) {
                 LWDTC_DEBUG("bit_end_pos is greater than maximum: %d/%d\r\n", (int)bit_end_pos, (int)val_max);
                 return lwdtcERRTOKEN;
             }
