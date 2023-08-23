@@ -453,6 +453,48 @@ lwdtc_cron_is_valid_for_time(const struct tm* tm_time, const lwdtc_cron_ctx_t* c
 }
 
 /**
+ * \brief           Get next time of fire for specific cron object
+ * 
+ * This is a dirty implementatio and could be improved in the future.
+ * For now, we start with one second after current time, and do the roll
+ * over all values until we have a match.
+ * 
+ * \param           cron_ctx: CRON context object
+ * \param           curr_time: Current time, used as reference to get new time
+ * \param[out]      new_time: Pointer to new time value
+ * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise 
+ */
+lwdtcr_t
+lwdtc_cron_next(const lwdtc_cron_ctx_t* cron_ctx, time_t curr_time, time_t* new_time) {
+    lwdtcr_t res = lwdtcOK;
+    struct tm* datetime;
+
+    ASSERT_PARAM(cron_ctx != NULL);
+    ASSERT_PARAM(new_time != NULL);
+
+    /* Go to next second, ignore current actual time */
+    ++curr_time;
+    datetime = gmtime(&curr_time);
+    while (lwdtc_cron_is_valid_for_time(datetime, cron_ctx) != lwdtcOK) {
+        /* 
+         * If we are inside minute, just increase the seconds time,
+         * otherwise if we would roll up,
+         * run time generation on original curr_time object.
+         * 
+         * This will properly handle all time fields
+         */
+        ++curr_time;
+        if (datetime->tm_sec < LWDTC_SEC_MAX) {
+            ++datetime->tm_sec;
+        } else {
+            datetime = gmtime(&curr_time);
+        }
+    }
+    *new_time = curr_time;
+    return res;
+}
+
+/**
  * \brief           Check if current time fits to at least one of provided context arrays (OR operation)
  * \param[in]       tm_time: Current time to check if cron works for it.
  *                      Function assumes values in the structure are within valid boundaries
@@ -498,47 +540,4 @@ lwdtc_cron_is_valid_for_time_multi_and(const struct tm* tm_time, const lwdtc_cro
         }
     }
     return res;
-}
-
-/**
- * \brief           Convert `struct tm` to \ref lwdtc_dt_t datetime structure
- * \param[in]       tm_time: Datetime structure from `time.h` header to be converted
- * \param[in]       dt: Datetime structure to write converted data to
- * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise 
- */
-lwdtcr_t
-lwdtc_tm_to_dt(const struct tm* tm_time, lwdtc_dt_t* dt) {
-    ASSERT_PARAM(tm_time != NULL && dt != NULL);
-
-    dt->sec = tm_time->tm_sec;
-    dt->min = tm_time->tm_min;
-    dt->hour = tm_time->tm_hour;
-    dt->mday = tm_time->tm_mday;
-    dt->mon = tm_time->tm_mon;
-    dt->wday = tm_time->tm_wday;
-    dt->year = tm_time->tm_year - 100;
-
-    return lwdtcOK;
-}
-
-/**
- * \brief           Convert \ref lwdtc_dt_t datetime structure to `struct tm` data type from `time.h` library
- * \param[in]       dt: Datetime structure to write converted data
- * \param[in]       tm_time: Datetime structure from `time.h` header to be converted
- * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise 
- */
-lwdtcr_t
-lwdtc_dt_to_tm(const lwdtc_dt_t* dt, struct tm* tm_time) {
-    ASSERT_PARAM(dt != NULL);
-    ASSERT_PARAM(tm_time != NULL);
-
-    tm_time->tm_sec = dt->sec;
-    tm_time->tm_min = dt->min;
-    tm_time->tm_hour = dt->hour;
-    tm_time->tm_mday = dt->mday;
-    tm_time->tm_mon = dt->mon;
-    tm_time->tm_wday = dt->wday;
-    tm_time->tm_year = dt->year + 100;
-
-    return lwdtcOK;
 }

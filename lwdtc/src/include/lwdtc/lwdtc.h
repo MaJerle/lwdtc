@@ -100,31 +100,6 @@ typedef struct {
     uint8_t year[13]; /*!< Year from 0 - 100, indicating 2000 - 2100. Must support bits 0 to 100 */
 } lwdtc_cron_ctx_t;
 
-/**
- * \brief           Date and time structure of LwDTC library
- *
- * Not used for the moment, but defined as placeholder for the future.
- */
-typedef struct {
-    uint8_t sec;  /*!< Seconds in a minute.
-                                                        Value between \ref LWDTC_SEC_MIN and \ref LWDTC_SEC_MAX */
-    uint8_t min;  /*!< Minutes in a hour.
-                                                        Value between \ref LWDTC_MIN_MIN and \ref LWDTC_MIN_MAX */
-    uint8_t hour; /*!< Hours in a day.
-                                                        Value between \ref LWDTC_HOUR_MIN and \ref LWDTC_HOUR_MAX */
-    uint8_t mday; /*!< Day in a month.
-                                                        Value between \ref LWDTC_MDAY_MIN and \ref LWDTC_MDAY_MAX */
-    uint8_t mon;  /*!< Month in a year.
-                                                        Value between \ref LWDTC_MON_MIN and \ref LWDTC_MON_MAX */
-    uint8_t wday; /*!< Week day, between Sunday and Saturday.
-                                                        Value between \ref LWDTC_WDAY_MIN and \ref LWDTC_WDAY_MAX */
-    uint8_t year; /*!< Year, starting with `2000`.
-                                                        Value between \ref LWDTC_YEAR_MIN and \ref LWDTC_YEAR_MAX
-                                                   \note This is different versus `struct tm` from `time.h` library, where years
-                                                         start from `1900`, hence year `2022` is written as `122` in `struct tm`,
-                                                         while same year is set as `22` this field */
-} lwdtc_dt_t;
-
 lwdtcr_t lwdtc_cron_parse_with_len(lwdtc_cron_ctx_t* ctx, const char* cron_str, size_t cron_str_len);
 lwdtcr_t lwdtc_cron_parse(lwdtc_cron_ctx_t* ctx, const char* cron_str);
 lwdtcr_t lwdtc_cron_parse_multi(lwdtc_cron_ctx_t* cron_ctx, const char** cron_strs, size_t ctx_len, size_t* fail_index);
@@ -134,9 +109,7 @@ lwdtcr_t lwdtc_cron_is_valid_for_time_multi_or(const struct tm* tm_time, const l
                                                size_t ctx_len);
 lwdtcr_t lwdtc_cron_is_valid_for_time_multi_and(const struct tm* tm_time, const lwdtc_cron_ctx_t* cron_ctx,
                                                 size_t ctx_len);
-
-lwdtcr_t lwdtc_tm_to_dt(const struct tm* tm_time, lwdtc_dt_t* dt);
-lwdtcr_t lwdtc_dt_to_tm(const lwdtc_dt_t* dt, struct tm* tm_time);
+lwdtcr_t lwdtc_cron_next(const lwdtc_cron_ctx_t* cron_ctx, time_t curr_time, time_t* new_time);
 
 /**
  * \}
