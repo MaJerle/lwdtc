@@ -43,24 +43,19 @@
 #endif /* defined(LWDTC_DEV) */
 
 /* Internal defines */
-#define ASSERT_PARAM(c)                                                                                                \
+#define ASSERT_WITH_RETURN(c, retval)                                                                                  \
     if (!(c)) {                                                                                                        \
-        return lwdtcERRPAR;                                                                                            \
+        return retval;                                                                                                 \
     }
-#define ASSERT_TOKEN_VALID(c)                                                                                          \
-    if (!(c)) {                                                                                                        \
-        return lwdtcERRTOKEN;                                                                                          \
-    }
-#define ASSERT_ACTION(c)                                                                                               \
-    if (!(c)) {                                                                                                        \
-        return lwdtcERR;                                                                                               \
-    }
+#define ASSERT_PARAM(c)       ASSERT_WITH_RETURN(c, lwdtcERRPAR)
+#define ASSERT_TOKEN_VALID(c) ASSERT_WITH_RETURN(c, lwdtcERRTOKEN)
+#define ASSERT_ACTION(c)      ASSERT_WITH_RETURN(c, lwdtcERR)
 
-#define CHAR_IS_NUM(c)       ((c) >= '0' && (c) <= '9')
-#define CHAR_TO_NUM(c)       ((c) - '0')
+#define CHAR_IS_NUM(c)        ((c) >= '0' && (c) <= '9')
+#define CHAR_TO_NUM(c)        ((c) - '0')
 
-#define BIT_IS_SET(map, pos) ((map)[(pos) >> 3] & (1 << ((pos)&0x07)))
-#define BIT_SET(map, pos)    (map)[(pos) >> 3] |= (1 << ((pos)&0x07))
+#define BIT_IS_SET(map, pos)  ((map)[(pos) >> 3] & (1 << ((pos)&0x07)))
+#define BIT_SET(map, pos)     (map)[(pos) >> 3] |= (1 << ((pos)&0x07))
 
 /**
  * \brief           Private structure to parse cron input
