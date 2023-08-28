@@ -2,58 +2,84 @@
 #include <windows.h>
 #include "lwdtc/lwdtc.h"
 
-static void
-print_bytes_string(const uint8_t* d, size_t btp) {
-    printf("|");
-    for (size_t i = 0; i < 13 - btp; ++i) {
-        printf("        |");
+typedef struct {
+    const char* cron_str;
+    const char* next_str[3];
+} cron_entry_t;
+
+#define CRON_ENTRY(_cron_str_, _next1_, _next2_, _next3_)                                                              \
+    {                                                                                                                  \
+        .cron_str = (_cron_str_),                                                                                      \
+        .next_str = {                                                                                                  \
+            (_next1_),                                                                                                 \
+            (_next2_),                                                                                                 \
+            (_next3_),                                                                                                 \
+        },                                                                                                             \
     }
-    while (btp-- > 0) {
-        for (size_t i = 0; i < 8; ++i) {
-            printf("%d", (int)((d[btp] & (1 << (7 - i))) > 0));
-        }
-        printf("|");
-    }
-    printf("\r\n");
-}
 
-static void
-print_cron_ctx(const lwdtc_cron_ctx_t* ctx) {
-    printf("|103   96|95    88|87    80|79    72|71    64|63    56|55    48|47    40|39    32|31    24|23    16|15     "
-           "8|7      0|\r\n");
-    printf("||      |||      |||      |||      |||      |||      |||      |||      |||      |||      |||      |||      "
-           "|||      ||\r\n");
-    print_bytes_string(ctx->sec, sizeof(ctx->sec));
-    print_bytes_string(ctx->min, sizeof(ctx->min));
-    print_bytes_string(ctx->hour, sizeof(ctx->hour));
-    print_bytes_string(ctx->mday, sizeof(ctx->mday));
-    print_bytes_string(ctx->mon, sizeof(ctx->mon));
-    print_bytes_string(ctx->wday, sizeof(ctx->wday));
-    print_bytes_string(ctx->year, sizeof(ctx->year));
-}
+/* Variables as reference */
+#define TIME_T_START   1693256990
+#define TIME_STR_START "2023-08-28_23:09:50" /* Monday */
 
-const char* cron_tokens_list[] = {
-    "* * * * * * *",      /* Token is valid all the time, will fire every day */
-    "0 * * * * * *",      /* Token is valid at beginning of each minute (seconds == 0) */
-    "* * * * * 2 *",      /* Fires every each Tuesday */
-    "*/5 * * * * * *",    /* Fires every 5 seconds */
-    "*/5 */5 * * * * *",  /* Fires each 5 seconds in a minute, every 5 minutes
-                                (min:sec)
-                                (00:00, 00:05, 00:10, ...)
-                                (05:00, 05:05, 05:10, ...)
-                                (10:00, 10:05, 10:10, ...) */
-    "0 0 0 * * 5 * ",     /* Every Friday at midnight */
-    "0 0 */2 * * * *",    /* Every 2 hours at beginning of the hour */
-    "* * */2 * * * *",    /* Every second of every minute every 2 hours */
-    "0 0 0 * * 1-5 *",    /* At midnight, 00:00 every week between Monday and Friday */
-    "15 23 */6 * * * * ", /* Every 6 hours at (min:sec) 23:15 (00:23:15, 06:23:15, 12:23:15, ...) */
-    "0 0 0 1 * * *",      /* At 00:00:00 beginning of the month */
-    "0 0 0 1 */3 * *",  /* Every beginning of the quarter, every first day in a month in every 3rd month at 00:00:00 */
-    "10 15 20 * 8 6 *", /* At 20:15:20 every Saturday in August */
-    "10 15 20 8 * 6 *", /* At 20:15:20 every Saturday that is also 8th day in Month (both must match, day saturday and date 8th) */
+/*
+ * List of test vectors.
+ *
+ * Time is referenced to:
+ * - time_t:    TIME_T_START
+ * - time_str:  TIME_STR_START
+ * 
+ * Times in the parameters represent when, related to the start time (set above)
+ * should the CRON fire next time
+ */
+static cron_entry_t cron_entries[] = {
+    /* Fire every second all the time */
+    CRON_ENTRY("* * * * * * *", "2023-08-28_23:09:51", "2023-08-28_23:09:52", "2023-08-28_23:09:53"),
 
-    "49-47 * * * * * *",   /* All seconds in minute except second 48 */
-    "49-07/3 * * * * * *", /* Every third second from 49 to 07 (49, 52, 55, 58, 01, 04, 07) */
+    /* Fire every beginning of a minute */
+    CRON_ENTRY("0 * * * * * *", "2023-08-28_23:10:00", "2023-08-28_23:11:00", "2023-08-28_23:12:00"),
+
+    /* Fire every second on Tuesday */
+    CRON_ENTRY("* * * * * 2 *", "2023-08-29_00:00:00", "2023-08-29_00:00:01", "2023-08-29_00:00:02"),
+
+    /* Fires every 5 seconds every day */
+    CRON_ENTRY("*/5 * * * * * *", "2023-08-28_23:09:55", "2023-08-28_23:10:00", "2023-08-28_23:10:05"),
+
+    /* Fires each 5 seconds in one minute, repeat this minute every 5 minutes
+        (00:00, 00:05, 00:10, ..., 05:00, 05:05, 05:10, ..., 10:00, 10:05, 10:10, ...) */
+    CRON_ENTRY("*/5 */5 * * * * *", "2023-08-28_23:10:00", "2023-08-28_23:10:05", "2023-08-28_23:10:10"),
+
+    /* Fire every Friday at midnight */
+    CRON_ENTRY("0 0 0 * * 5 * *", "2023-09-01_00:00:00", "2023-09-08_00:00:00", "2023-09-15_00:00:00"),
+
+    /* Fire every 2 hours, at the beginning of the hour (x:0:0) */
+    CRON_ENTRY("0 0 */2 * * * *", "2023-08-29_00:00:00", "2023-08-29_02:00:00", "2023-08-29_04:00:00"),
+
+    /* Fires every second in an hour, but every second hour */
+    CRON_ENTRY("* * */2 * * * *", "2023-08-29_00:00:00", "2023-08-29_00:00:01", "2023-08-29_00:00:02"),
+
+    /* Fires at midnight, every week between Monday and Friday */
+    CRON_ENTRY("0 0 0 * * 1-5 *", "2023-08-29_00:00:00", "2023-08-30_00:00:00", "2023-08-31_00:00:00"),
+
+    /* Every 6 hours at (min:sec) 23:15 (00:23:15, 06:23:15, 12:23:15, ...) */
+    CRON_ENTRY("15 23 */6 * * * *", "2023-08-29_00:23:15", "2023-08-29_06:23:15", "2023-08-29_12:23:15"),
+
+    /* At the beginning of the month -> first day in a month */
+    CRON_ENTRY("0 0 0 1 * * *", "2023-09-01_00:00:00", "2023-10-01_00:00:00", "2023-11-01_00:00:00"),
+
+    /* Every beginning of a quarter -> first day every 3rd month */
+    CRON_ENTRY("0 0 0 1 3,6,9,12 * *", "2023-09-01_00:00:00", "2023-12-01_00:00:00", "2024-03-01_00:00:00"),
+
+    /* At 20:15:10 every Saturday in August */
+    CRON_ENTRY("10 15 20 * 8 6 *", "2024-08-03_20:15:10", "2024-08-10_20:15:10", "2024-08-17_20:15:10"),
+
+    /* At 20:15:10 every Saturday that is also 8th day in Month (both must match, day saturday and date 8th) */
+    CRON_ENTRY("10 15 20 8 * 6 *", "2024-06-08_20:15:10", "2025-02-08_20:15:10", "2025-03-08_20:15:10"),
+
+    /* All seconds in a minute except second 48 */
+    CRON_ENTRY("49-47 * * * * * *", "2023-08-28_23:09:51", "2023-08-28_23:09:52", "2023-08-28_23:09:53"),
+
+    /* Every third second from 49 to 07 (49, 52, 55, 58, 01, 04, 07) */
+    CRON_ENTRY("49-07/3 * * * * * *", "2023-08-28_23:09:52", "2023-08-28_23:09:55", "2023-08-28_23:09:58"),
 };
 
 /* External examples */
@@ -65,8 +91,8 @@ extern int cron_calc_range(void);
 static const char*
 prv_format_time_to_str(struct tm* dt) {
     static char str[64];
-    sprintf(str, "%02d.%02d.%04d %02d:%02d:%02d", (int)dt->tm_mday, (int)dt->tm_mon, (int)(dt->tm_year + 1900),
-            (int)dt->tm_hour, (int)dt->tm_min, (int)dt->tm_sec);
+    sprintf(str, "%04u-%02u-%02u_%02u:%02u:%02u", (unsigned)(dt->tm_year + 1900), (unsigned)(dt->tm_mon + 1),
+            (unsigned)dt->tm_mday, (unsigned)dt->tm_hour, (unsigned)dt->tm_min, (unsigned)dt->tm_sec);
     return str;
 }
 
@@ -76,47 +102,41 @@ main(void) {
     time_t rawtime, rawtime_old = 0;
     struct tm* timeinfo;
 
-    /* Run different examples */
-    //cron_multi();
+    /* Get time and print to user */
+    rawtime = TIME_T_START;
+    timeinfo = localtime(&rawtime);
+    printf("Time: %s, raw: %u\r\n", prv_format_time_to_str(timeinfo), (int)rawtime);
 
-    /* Range calculation */
-    //cron_calc_range();
+    /* Run through all */
+    for (size_t e_idx = 0; e_idx < (sizeof(cron_entries) / sizeof(cron_entries[0])); ++e_idx) {
+        lwdtc_cron_parse(&cron_ctx, cron_entries[e_idx].cron_str);
 
-    /* Run example */
-    //cron_dt_range();
+        /* Run next several time and compare */
+        rawtime = TIME_T_START;
+        for (size_t i = 0; i < 3; ++i) {
+            if (cron_entries[e_idx].next_str[i] != NULL) {
+                size_t len_next_str = strlen(cron_entries[e_idx].next_str[i]);
 
-#if 0
-    for (size_t i = 0; i < LWDTC_ARRAYSIZE(cron_tokens_list); ++i) {
-        lwdtcr_t res;
-        printf("Parsing token: %s\r\n", cron_tokens_list[i]);
-        if ((res = lwdtc_cron_parse(&cron_ctx, cron_tokens_list[i])) != lwdtcOK) {
-            lwdtc_cron_parse(&cron_ctx, cron_tokens_list[i]);
+                if (len_next_str > 0) {
+                    const char* time_next;
+
+                    /* Calculate data */
+                    lwdtc_cron_next(&cron_ctx, rawtime, &rawtime);
+                    timeinfo = localtime(&rawtime);
+
+                    /* Format text */
+                    time_next = prv_format_time_to_str(timeinfo);
+                    if (strcmp(time_next, cron_entries[e_idx].next_str[i]) != 0) {
+                        printf("Test failed: cron: %s, exp: %s, got: %s\r\n", cron_entries[e_idx].cron_str,
+                               cron_entries[e_idx].next_str[i], time_next);
+                        return -1;
+                    }
+                } else {
+                    break;
+                }
+            }
         }
-        printf("Result (0 = OK, > 0 = KO): %d\r\n", (int)res);
-        print_cron_ctx(&cron_ctx);
-        printf("----\r\n");
     }
-#endif
-    /* Get parser */
-    lwdtc_cron_parse(&cron_ctx, "*/15 * * * * * *");
-    time(&rawtime);
-    timeinfo = localtime(&rawtime);
-    printf("Time current: %s\r\n", prv_format_time_to_str(timeinfo));
-
-    /* Get next time */
-    lwdtc_cron_next(&cron_ctx, rawtime, &rawtime);
-    timeinfo = localtime(&rawtime);
-    printf("Time next 1: %s\r\n", prv_format_time_to_str(timeinfo));
-
-    /* Get next time */
-    lwdtc_cron_next(&cron_ctx, rawtime, &rawtime);
-    timeinfo = localtime(&rawtime);
-    printf("Time next 2: %s\r\n", prv_format_time_to_str(timeinfo));
-
-    /* Get next time */
-    lwdtc_cron_next(&cron_ctx, rawtime, &rawtime);
-    timeinfo = localtime(&rawtime);
-    printf("Time next 3: %s\r\n", prv_format_time_to_str(timeinfo));
 
     return 0;
 
