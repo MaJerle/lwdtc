@@ -19,14 +19,14 @@ Supported characters
 - Numbers between minimum and maximum value for each of date and time field
 - Support for ``seconds``, ``minutes``, ``hours``, ``day-in-month``, ``month``, ``day-in-week`` and ``year``,
 - ``-`` is used to define value range, with min and max boundaries, ``min-max`` or ``max-min``
-- ``,`` is used to specifc multiple fixed values
+- ``,`` is used to specify multiple fixed values
 - ``/`` is used to define step between min and max values
-- ``*`` is used to represend *any* value
+- ``*`` is used to represent *any* value
 
 .. note::
     Comparing to standard linux CRON, where fixed date in month and week day are bitwise-ORed, meaning cron will fire
-    on day in month match or on week day match, LwDTC does it more simple. Date&Time is valid only if both parameters are match at the same time.
-    In practice, setting cron to fire on ``month-day = 15`` and ``week-day = 6``, will trigger it only on 15th in a month which is also Saturday at the same time. 
+    on day in month match or on week day match, LwDTC does it more simple. Date&Time is valid only if both parameters are a match at the same time.
+    In practice, setting cron to fire on ``month-day = 15`` and ``week-day = 6``, will trigger it only on **15th** in a month which is also **Saturday** at the same time. 
 
 CRON string format
 ******************
