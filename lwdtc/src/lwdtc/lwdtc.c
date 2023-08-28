@@ -440,7 +440,7 @@ lwdtc_cron_is_valid_for_time(const struct tm* tm_time, const lwdtc_cron_ctx_t* c
      */
     if (!BIT_IS_SET(cron_ctx->sec, tm_time->tm_sec) || !BIT_IS_SET(cron_ctx->min, tm_time->tm_min)
         || !BIT_IS_SET(cron_ctx->hour, tm_time->tm_hour) || !BIT_IS_SET(cron_ctx->mday, tm_time->tm_mday)
-        || !BIT_IS_SET(cron_ctx->mon, tm_time->tm_mon) || !BIT_IS_SET(cron_ctx->wday, tm_time->tm_wday)
+        || !BIT_IS_SET(cron_ctx->mon, (tm_time->tm_mon + 1)) || !BIT_IS_SET(cron_ctx->wday, tm_time->tm_wday)
         || !BIT_IS_SET(cron_ctx->year, (tm_time->tm_year - 100))) {
         res = lwdtcERR;
     }
@@ -450,7 +450,7 @@ lwdtc_cron_is_valid_for_time(const struct tm* tm_time, const lwdtc_cron_ctx_t* c
 /**
  * \brief           Get next time of fire for specific cron object
  * 
- * This is a dirty implementatio and could be improved in the future.
+ * This is a dirty implementation and could be improved in the future.
  * For now, we start with one second after current time, and do the roll
  * over all values until we have a match.
  * 
@@ -469,20 +469,36 @@ lwdtc_cron_next(const lwdtc_cron_ctx_t* cron_ctx, time_t curr_time, time_t* new_
 
     /* Go to next second, ignore current actual time */
     ++curr_time;
-    datetime = gmtime(&curr_time);
+    datetime = localtime(&curr_time);
     while (lwdtc_cron_is_valid_for_time(datetime, cron_ctx) != lwdtcOK) {
+        uint8_t run_time = 0;
+
         /* 
-         * If we are inside minute, just increase the seconds time,
-         * otherwise if we would roll up,
-         * run time generation on original curr_time object.
+         * We can manually update the structure,
+         * at least until we are inside same day.
          * 
-         * This will properly handle all time fields
+         * On the overflow, it is necessary to 
+         * call time generation function again,
+         * which will properly handle time, month, year, etc, for us.
          */
-        ++curr_time;
-        if (datetime->tm_sec < LWDTC_SEC_MAX) {
-            ++datetime->tm_sec;
-        } else {
-            datetime = gmtime(&curr_time);
+        ++curr_time; /* Increase time to next value */
+
+        ++datetime->tm_sec;
+        if (datetime->tm_sec > 59) {
+            datetime->tm_sec = 0;
+            ++datetime->tm_min;
+            if (datetime->tm_min > 59) {
+                datetime->tm_min = 0;
+                ++datetime->tm_hour;
+                if (datetime->tm_hour > 23) {
+                    run_time = 1;
+                }
+            }
+        }
+
+        /* We run the time based on the curr_time variable */
+        if (run_time) {
+            datetime = localtime(&curr_time);
         }
     }
     *new_time = curr_time;
