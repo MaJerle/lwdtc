@@ -108,35 +108,40 @@ main(void) {
     printf("Time: %s, raw: %u\r\n", prv_format_time_to_str(timeinfo), (int)rawtime);
 
     /* Run through all */
-    for (size_t e_idx = 0; e_idx < (sizeof(cron_entries) / sizeof(cron_entries[0])); ++e_idx) {
-        lwdtc_cron_parse(&cron_ctx, cron_entries[e_idx].cron_str);
+    uint64_t time_start = GetTickCount64();
+    for (size_t runindex = 0; runindex < 100; runindex++) {
+        for (size_t e_idx = 0; e_idx < (sizeof(cron_entries) / sizeof(cron_entries[0])); ++e_idx) {
+            lwdtc_cron_parse(&cron_ctx, cron_entries[e_idx].cron_str);
 
-        /* Run next several time and compare */
-        rawtime = TIME_T_START;
-        for (size_t i = 0; i < 3; ++i) {
-            if (cron_entries[e_idx].next_str[i] != NULL) {
-                size_t len_next_str = strlen(cron_entries[e_idx].next_str[i]);
+            /* Run next several time and compare */
+            rawtime = TIME_T_START;
+            for (size_t i = 0; i < 3; ++i) {
+                if (cron_entries[e_idx].next_str[i] != NULL) {
+                    size_t len_next_str = strlen(cron_entries[e_idx].next_str[i]);
 
-                if (len_next_str > 0) {
-                    const char* time_next;
+                    if (len_next_str > 0) {
+                        const char* time_next;
 
-                    /* Calculate data */
-                    lwdtc_cron_next(&cron_ctx, rawtime, &rawtime);
-                    timeinfo = localtime(&rawtime);
+                        /* Calculate data */
+                        lwdtc_cron_next(&cron_ctx, rawtime, &rawtime);
+                        timeinfo = localtime(&rawtime);
 
-                    /* Format text */
-                    time_next = prv_format_time_to_str(timeinfo);
-                    if (strcmp(time_next, cron_entries[e_idx].next_str[i]) != 0) {
-                        printf("Test failed: cron: %s, exp: %s, got: %s\r\n", cron_entries[e_idx].cron_str,
-                               cron_entries[e_idx].next_str[i], time_next);
-                        return -1;
+                        /* Format text */
+                        time_next = prv_format_time_to_str(timeinfo);
+                        if (strcmp(time_next, cron_entries[e_idx].next_str[i]) != 0) {
+                            printf("Test failed: cron: %s, exp: %s, got: %s\r\n", cron_entries[e_idx].cron_str,
+                                   cron_entries[e_idx].next_str[i], time_next);
+                            return -1;
+                        }
+                    } else {
+                        break;
                     }
-                } else {
-                    break;
                 }
             }
         }
     }
+    uint64_t time_end = GetTickCount64();
+    printf("Total tick: %llu\r\n\r\n", (unsigned long long)(time_end - time_start));
 
     return 0;
 

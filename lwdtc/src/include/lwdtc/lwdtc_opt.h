@@ -53,6 +53,23 @@ extern "C" {
  */
 
 /**
+ * \brief           Get the local time (struct tm) from the time_t pointer type
+ * 
+ * Default implementation uses localtime but user may use gmtime or even create its own implementation,
+ * depending on the target system and overall wishes.
+ * 
+ * \param[in]       _struct_tm_ptr_: Pointer variable to `struct tm` type.
+ *                      Variable is a pointer type and does not store actual time data.
+ * \param[in]       _const_time_t_ptr_: Pointer to the `time_t` variable to get time from
+ */
+#ifndef LWDTC_CFG_GET_LOCALTIME
+#define LWDTC_CFG_GET_LOCALTIME(_struct_tm_ptr_, _const_time_t_ptr_)                                                   \
+    do {                                                                                                               \
+        (_struct_tm_ptr_) = localtime((_const_time_t_ptr_));                                                           \
+    } while (0);
+#endif
+
+/**
  * \}
  */
 

@@ -37,7 +37,7 @@
 
 #if defined(LWDTC_DEV)
 #include <stdio.h>
-#define LWDTC_DEBUG(...) printf(__VA_ARGS__)
+#define LWDTC_DEBUG(...) /* printf(__VA_ARGS__) */
 #else
 #define LWDTC_DEBUG(...)
 #endif /* defined(LWDTC_DEV) */
@@ -462,44 +462,37 @@ lwdtc_cron_is_valid_for_time(const struct tm* tm_time, const lwdtc_cron_ctx_t* c
 lwdtcr_t
 lwdtc_cron_next(const lwdtc_cron_ctx_t* cron_ctx, time_t curr_time, time_t* new_time) {
     lwdtcr_t res = lwdtcOK;
-    struct tm* datetime;
+    struct tm* tm_time;
 
     ASSERT_PARAM(cron_ctx != NULL);
     ASSERT_PARAM(new_time != NULL);
 
     /* Go to next second, ignore current actual time */
     ++curr_time;
-    datetime = localtime(&curr_time);
-    while (lwdtc_cron_is_valid_for_time(datetime, cron_ctx) != lwdtcOK) {
-        uint8_t run_time = 0;
-
+    LWDTC_CFG_GET_LOCALTIME(tm_time, &curr_time);
+    while (lwdtc_cron_is_valid_for_time(tm_time, cron_ctx) != lwdtcOK) {
         /* 
-         * We can manually update the structure,
-         * at least until we are inside same day.
-         * 
-         * On the overflow, it is necessary to 
-         * call time generation function again,
-         * which will properly handle time, month, year, etc, for us.
+         * Does the CRON happen in this hour?
+         *
+         * We do not jump for more than an hour, to avoid any timezone issues.
+         * We assume timezone mismatch is not greather than 30min (1800 seconds)
          */
-        ++curr_time; /* Increase time to next value */
-
-        ++datetime->tm_sec;
-        if (datetime->tm_sec > 59) {
-            datetime->tm_sec = 0;
-            ++datetime->tm_min;
-            if (datetime->tm_min > 59) {
-                datetime->tm_min = 0;
-                ++datetime->tm_hour;
-                if (datetime->tm_hour > 23) {
-                    run_time = 1;
-                }
-            }
+        if (!BIT_IS_SET(cron_ctx->mday, tm_time->tm_mday) || !BIT_IS_SET(cron_ctx->wday, tm_time->tm_wday)
+            || !BIT_IS_SET(cron_ctx->hour, tm_time->tm_hour)) {
+            curr_time += 1800 - (curr_time % 1800); /* Increase with the beg of a minute alignment */
+            goto before_cont;
         }
 
-        /* We run the time based on the curr_time variable */
-        if (run_time) {
-            datetime = localtime(&curr_time);
+        /* Does the CRON happen in this minute? */
+        if (!BIT_IS_SET(cron_ctx->min, tm_time->tm_min)) {
+            curr_time += 60 - (curr_time % 60); /* Go to the beg of next minute */
+            goto before_cont;
         }
+
+        /* It happens in this minute, so just increase seconds counter and try again */
+        ++curr_time;
+    before_cont:
+        LWDTC_CFG_GET_LOCALTIME(tm_time, &curr_time);
     }
     *new_time = curr_time;
     return res;
