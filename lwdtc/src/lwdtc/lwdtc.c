@@ -462,37 +462,40 @@ lwdtc_cron_is_valid_for_time(const struct tm* tm_time, const lwdtc_cron_ctx_t* c
 lwdtcr_t
 lwdtc_cron_next(const lwdtc_cron_ctx_t* cron_ctx, time_t curr_time, time_t* new_time) {
     lwdtcr_t res = lwdtcOK;
-    struct tm* tm_time;
+    struct tm tm_time;
 
     ASSERT_PARAM(cron_ctx != NULL);
     ASSERT_PARAM(new_time != NULL);
 
     /* Go to next second, ignore current actual time */
     ++curr_time;
-    LWDTC_CFG_GET_LOCALTIME(tm_time, &curr_time);
-    while (lwdtc_cron_is_valid_for_time(tm_time, cron_ctx) != lwdtcOK) {
+    LWDTC_CFG_GET_LOCALTIME(&tm_time, &curr_time);
+    while (lwdtc_cron_is_valid_for_time(&tm_time, cron_ctx) != lwdtcOK) {
         /* 
          * Does the CRON happen in this hour?
          *
          * We do not jump for more than an hour, to avoid any timezone issues.
          * We assume timezone mismatch is not greather than 30min (1800 seconds)
          */
-        if (!BIT_IS_SET(cron_ctx->mday, tm_time->tm_mday) || !BIT_IS_SET(cron_ctx->wday, tm_time->tm_wday)
-            || !BIT_IS_SET(cron_ctx->hour, tm_time->tm_hour)) {
+        if (!BIT_IS_SET(cron_ctx->mday, tm_time.tm_mday) || !BIT_IS_SET(cron_ctx->wday, tm_time.tm_wday)
+            || !BIT_IS_SET(cron_ctx->hour, tm_time.tm_hour)) {
             curr_time += 1800 - (curr_time % 1800); /* Increase with the beg of a minute alignment */
             goto before_cont;
         }
 
         /* Does the CRON happen in this minute? */
-        if (!BIT_IS_SET(cron_ctx->min, tm_time->tm_min)) {
+        if (!BIT_IS_SET(cron_ctx->min, tm_time.tm_min)) {
             curr_time += 60 - (curr_time % 60); /* Go to the beg of next minute */
             goto before_cont;
         }
 
         /* It happens in this minute, so just increase seconds counter and try again */
         ++curr_time;
+        if (++tm_time.tm_sec <= LWDTC_SEC_MAX) {
+            continue;
+        }
     before_cont:
-        LWDTC_CFG_GET_LOCALTIME(tm_time, &curr_time);
+        LWDTC_CFG_GET_LOCALTIME(&tm_time, &curr_time);
     }
     *new_time = curr_time;
     return res;
