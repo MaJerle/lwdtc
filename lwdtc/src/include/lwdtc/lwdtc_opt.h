@@ -53,6 +53,15 @@ extern "C" {
  */
 
 /**
+ * \brief           Memory set function
+ * 
+ * \note            Function footprint is the same as \ref memset
+ */
+#ifndef LWDTC_MEMSET
+#define LWDTC_MEMSET(dst, val, len) memset((dst), (val), (len))
+#endif
+
+/**
  * \brief           Get the local time (struct tm) from the time_t pointer type
  * 
  * Default implementation uses localtime but user may use gmtime or even create its own implementation,

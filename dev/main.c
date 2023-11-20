@@ -96,6 +96,9 @@ prv_format_time_to_str(struct tm* dt) {
     return str;
 }
 
+#include <stdint.h>
+#define BIT_SET(map, pos) (map)[(pos) >> 3U] |= (1U << ((pos) & 0x07U))
+
 int
 main(void) {
     lwdtc_cron_ctx_t cron_ctx = {0};
