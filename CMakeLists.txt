@@ -41,6 +41,7 @@ else()
     )
 
     # Add subdir with lwdtc and link to project
+    set(LWDTC_OPTS_DIR ${CMAKE_CURRENT_LIST_DIR}/dev)
     add_subdirectory(lwdtc)
     target_link_libraries(${PROJECT_NAME} lwdtc)
 endif()
