@@ -73,7 +73,7 @@ extern "C" {
  */
 #ifndef LWDTC_CFG_GET_LOCALTIME
 #define LWDTC_CFG_GET_LOCALTIME(_struct_tm_ptr_, _const_time_t_ptr_)                                                   \
-    localtime_s((_struct_tm_ptr_), (_const_time_t_ptr_))
+    (void)localtime_s((_struct_tm_ptr_), (_const_time_t_ptr_))
 #endif
 
 /**
