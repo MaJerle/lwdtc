@@ -4,16 +4,14 @@
 
 typedef struct {
     const char* cron_str;
-    const char* next_str[3];
+    const char* next_str[6];
 } cron_entry_t;
 
-#define CRON_ENTRY(_cron_str_, _next1_, _next2_, _next3_)                                                              \
+#define CRON_ENTRY(_cron_str_, _next1_, _next2_, _next3_, _next4_, _next5_, _next6_)                                   \
     {                                                                                                                  \
         .cron_str = (_cron_str_),                                                                                      \
         .next_str = {                                                                                                  \
-            (_next1_),                                                                                                 \
-            (_next2_),                                                                                                 \
-            (_next3_),                                                                                                 \
+            (_next1_), (_next2_), (_next3_), (_next4_), (_next5_), (_next6_),                                          \
         },                                                                                                             \
     }
 
@@ -33,56 +31,69 @@ typedef struct {
  */
 static cron_entry_t cron_entries[] = {
     /* Fire every second all the time */
-    CRON_ENTRY("* * * * * * *", "2023-08-28_23:09:51", "2023-08-28_23:09:52", "2023-08-28_23:09:53"),
+    CRON_ENTRY("* * * * * * *", "2023-08-28_23:09:51", "2023-08-28_23:09:52", "2023-08-28_23:09:53", NULL, NULL, NULL),
 
     /* Fire every beginning of a minute */
-    CRON_ENTRY("0 * * * * * *", "2023-08-28_23:10:00", "2023-08-28_23:11:00", "2023-08-28_23:12:00"),
+    CRON_ENTRY("0 * * * * * *", "2023-08-28_23:10:00", "2023-08-28_23:11:00", "2023-08-28_23:12:00", NULL, NULL, NULL),
 
     /* Fire every second on Tuesday */
-    CRON_ENTRY("* * * * * 2 *", "2023-08-29_00:00:00", "2023-08-29_00:00:01", "2023-08-29_00:00:02"),
+    CRON_ENTRY("* * * * * 2 *", "2023-08-29_00:00:00", "2023-08-29_00:00:01", "2023-08-29_00:00:02", NULL, NULL, NULL),
 
     /* Fires every 5 seconds every day */
-    CRON_ENTRY("*/5 * * * * * *", "2023-08-28_23:09:55", "2023-08-28_23:10:00", "2023-08-28_23:10:05"),
+    CRON_ENTRY("*/5 * * * * * *", "2023-08-28_23:09:55", "2023-08-28_23:10:00", "2023-08-28_23:10:05", NULL, NULL,
+               NULL),
 
     /* Fires each 5 seconds in one minute, repeat this minute every 5 minutes
         (00:00, 00:05, 00:10, ..., 05:00, 05:05, 05:10, ..., 10:00, 10:05, 10:10, ...) */
-    CRON_ENTRY("*/5 */5 * * * * *", "2023-08-28_23:10:00", "2023-08-28_23:10:05", "2023-08-28_23:10:10"),
+    CRON_ENTRY("*/5 */5 * * * * *", "2023-08-28_23:10:00", "2023-08-28_23:10:05", "2023-08-28_23:10:10", NULL, NULL,
+               NULL),
 
     /* Fire every Friday at midnight */
-    CRON_ENTRY("0 0 0 * * 5 * *", "2023-09-01_00:00:00", "2023-09-08_00:00:00", "2023-09-15_00:00:00"),
+    CRON_ENTRY("0 0 0 * * 5 * *", "2023-09-01_00:00:00", "2023-09-08_00:00:00", "2023-09-15_00:00:00", NULL, NULL,
+               NULL),
 
     /* Fire every 2 hours, at the beginning of the hour (x:0:0) */
-    CRON_ENTRY("0 0 */2 * * * *", "2023-08-29_00:00:00", "2023-08-29_02:00:00", "2023-08-29_04:00:00"),
+    CRON_ENTRY("0 0 */2 * * * *", "2023-08-29_00:00:00", "2023-08-29_02:00:00", "2023-08-29_04:00:00", NULL, NULL,
+               NULL),
 
     /* Fires every second in an hour, but every second hour */
-    CRON_ENTRY("* * */2 * * * *", "2023-08-29_00:00:00", "2023-08-29_00:00:01", "2023-08-29_00:00:02"),
+    CRON_ENTRY("* * */2 * * * *", "2023-08-29_00:00:00", "2023-08-29_00:00:01", "2023-08-29_00:00:02", NULL, NULL,
+               NULL),
 
     /* Fires at midnight, every week between Monday and Friday */
-    CRON_ENTRY("0 0 0 * * 1-5 *", "2023-08-29_00:00:00", "2023-08-30_00:00:00", "2023-08-31_00:00:00"),
+    CRON_ENTRY("0 0 0 * * 1-5 *", "2023-08-29_00:00:00", "2023-08-30_00:00:00", "2023-08-31_00:00:00", NULL, NULL,
+               NULL),
 
     /* Every 6 hours at (min:sec) 23:15 (00:23:15, 06:23:15, 12:23:15, ...) */
-    CRON_ENTRY("15 23 */6 * * * *", "2023-08-29_00:23:15", "2023-08-29_06:23:15", "2023-08-29_12:23:15"),
+    CRON_ENTRY("15 23 */6 * * * *", "2023-08-29_00:23:15", "2023-08-29_06:23:15", "2023-08-29_12:23:15", NULL, NULL,
+               NULL),
 
     /* At the beginning of the month -> first day in a month */
-    CRON_ENTRY("0 0 0 1 * * *", "2023-09-01_00:00:00", "2023-10-01_00:00:00", "2023-11-01_00:00:00"),
+    CRON_ENTRY("0 0 0 1 * * *", "2023-09-01_00:00:00", "2023-10-01_00:00:00", "2023-11-01_00:00:00", NULL, NULL, NULL),
 
     /* Every beginning of a quarter -> first day every 3rd month */
-    CRON_ENTRY("0 0 0 1 3,6,9,12 * *", "2023-09-01_00:00:00", "2023-12-01_00:00:00", "2024-03-01_00:00:00"),
+    CRON_ENTRY("0 0 0 1 3,6,9,12 * *", "2023-09-01_00:00:00", "2023-12-01_00:00:00", "2024-03-01_00:00:00", NULL, NULL,
+               NULL),
 
     /* At 20:15:10 every Saturday in August */
-    CRON_ENTRY("10 15 20 * 8 6 *", "2024-08-03_20:15:10", "2024-08-10_20:15:10", "2024-08-17_20:15:10"),
+    CRON_ENTRY("10 15 20 * 8 6 *", "2024-08-03_20:15:10", "2024-08-10_20:15:10", "2024-08-17_20:15:10", NULL, NULL,
+               NULL),
 
     /* At 20:15:10 every Saturday that is also 8th day in Month (both must match, day saturday and date 8th) */
-    CRON_ENTRY("10 15 20 8 * 6 *", "2024-06-08_20:15:10", "2025-02-08_20:15:10", "2025-03-08_20:15:10"),
+    CRON_ENTRY("10 15 20 8 * 6 *", "2024-06-08_20:15:10", "2025-02-08_20:15:10", "2025-03-08_20:15:10", NULL, NULL,
+               NULL),
 
     /* All seconds in a minute except second 48 */
-    CRON_ENTRY("49-47 * * * * * *", "2023-08-28_23:09:51", "2023-08-28_23:09:52", "2023-08-28_23:09:53"),
+    CRON_ENTRY("49-47 * * * * * *", "2023-08-28_23:09:51", "2023-08-28_23:09:52", "2023-08-28_23:09:53", NULL, NULL,
+               NULL),
 
     /* Every third second from 49 to 07 (49, 52, 55, 58, 01, 04, 07) */
-    CRON_ENTRY("49-07/3 * * * * * *", "2023-08-28_23:09:52", "2023-08-28_23:09:55", "2023-08-28_23:09:58"),
+    CRON_ENTRY("49-07/3 * * * * * *", "2023-08-28_23:09:52", "2023-08-28_23:09:55", "2023-08-28_23:09:58", NULL, NULL,
+               NULL),
 
     /* Every beginning of a minute at start of an hour, every Sunday and Tuesday-Friday */
-    CRON_ENTRY("0 0 13 * * 0,2-5 *", "2023-08-29_13:00:00", "2023-08-30_13:00:00", "2023-08-31_13:00:00"),
+    CRON_ENTRY("0 0 13 * * 0,2-5 *", "2023-08-29_13:00:00", "2023-08-30_13:00:00", "2023-08-31_13:00:00",
+               "2023-09-01_13:00:00", "2023-09-03_13:00:00", "2023-09-05_13:00:00"),
 };
 
 /* External examples */
@@ -121,7 +132,7 @@ main(void) {
 
             /* Run next several time and compare */
             rawtime = TIME_T_START;
-            for (size_t i = 0; i < 3; ++i) {
+            for (size_t i = 0; i < (sizeof(cron_entries[0].next_str) / sizeof(cron_entries[0].next_str[0])); ++i) {
                 if (cron_entries[e_idx].next_str[i] != NULL) {
                     size_t len_next_str = strlen(cron_entries[e_idx].next_str[i]);
 
