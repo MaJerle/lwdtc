@@ -1,37 +1,35 @@
 {
-	"name": "LwDTC",
-	"version": "$_version_$",
-	"description": "Lightweight Date, Time & Cron utility",
-	"keywords": "lwdtc, date, time, cron, datetime, utility, unix, crontab",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/MaJerle/lwdtc.git"
-	},
-	"authors": [
-		{
-		  	"name": "Tilen Majerle",
-		  	"email": "tilen@majerle.eu",
-		  	"url": "https://majerle.eu"
-		}
-	],
-	"license": "MIT",
-	"homepage": "https://github.com/MaJerle/lwdtc",
-	"dependencies": {
-
-	},
-	"frameworks": "*",
-	"platforms": "*",
-	"export": {
-		"exclude": [
-			".github",
-			"dev",
-			"docs",
-			"**/.vs",
-			"**/Debug",
-			"build",
-			"**/build"
-		]
-	},
+    "name": "LwDTC",
+    "version": "1.0.0",
+    "description": "Lightweight Date, Time & Cron utility",
+    "keywords": "lwdtc, date, time, cron, datetime, utility, unix, crontab",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/MaJerle/lwdtc.git"
+    },
+    "authors": [
+        {
+            "name": "Tilen Majerle",
+            "email": "tilen@majerle.eu",
+            "url": "https://majerle.eu"
+        }
+    ],
+    "license": "MIT",
+    "homepage": "https://github.com/MaJerle/lwdtc",
+    "dependencies": {},
+    "frameworks": "*",
+    "platforms": "*",
+    "export": {
+        "exclude": [
+            ".github",
+            "dev",
+            "docs",
+            "**/.vs",
+            "**/Debug",
+            "build",
+            "**/build"
+        ]
+    },
     "build": {
         "includeDir": "lwdtc/src/include"
     }

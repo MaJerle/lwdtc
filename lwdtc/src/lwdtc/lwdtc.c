@@ -29,7 +29,7 @@
  * This file is part of LwDTC - Lightweight Date, Time & Cron library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         $_version_$
+ * Version:         v1.0.0
  */
 #include <stdint.h>
 #include <string.h>
