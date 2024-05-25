@@ -80,6 +80,9 @@ static cron_entry_t cron_entries[] = {
 
     /* Every third second from 49 to 07 (49, 52, 55, 58, 01, 04, 07) */
     CRON_ENTRY("49-07/3 * * * * * *", "2023-08-28_23:09:52", "2023-08-28_23:09:55", "2023-08-28_23:09:58"),
+
+    /* Every beginning of a minute at start of an hour, every Sunday and Tuesday-Friday */
+    CRON_ENTRY("0 0 13 * * 0,2-5 *", "2023-08-29_13:00:00", "2023-08-30_13:00:00", "2023-08-31_13:00:00"),
 };
 
 /* External examples */
