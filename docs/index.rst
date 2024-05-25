@@ -5,6 +5,8 @@ Welcome to the documentation for version |version|.
 
 LwDTC is lightweight, platform independent library for date, time and cron utility management.
 
+Main motivation comes from the necessity of simple cron for my own personal home automation project, with ``1`` second granularity.
+
 .. image:: static/images/logo.svg
     :align: center
 
@@ -16,9 +18,13 @@ LwDTC is lightweight, platform independent library for date, time and cron utili
 Features
 ^^^^^^^^
 
-* Written in ANSI C99
+* Written in C (C11)
 * Platform independent, easy to use
 * Support for date, time and cron utilities
+* Ultra-lightweight cron library for embedded systems
+* Cron supports numbers only, no string dates/months, quicker parsing
+* Support for `time.h` `struct tm` data structure for time operations
+* Date and time range support with CRON syntax
 * User friendly MIT license
 
 Requirements
@@ -50,6 +56,33 @@ Table of contents
 ^^^^^^^^^^^^^^^^^
 
 .. toctree::
-  :maxdepth: 2
+    :maxdepth: 2
+    :caption: Contents
 
-  self
+    self
+    get-started/index
+    user-manual/index
+    api-reference/index
+    changelog/index
+    authors/index
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Other projects
+    :hidden:
+
+    LwBTN - Button manager <https://github.com/MaJerle/lwbtn>
+    LwDTC - DateTimeCron <https://github.com/MaJerle/lwdtc>
+    LwESP - ESP-AT library <https://github.com/MaJerle/lwesp>
+    LwEVT - Event manager <https://github.com/MaJerle/lwevt>
+    LwGPS - GPS NMEA parser <https://github.com/MaJerle/lwgps>
+    LwCELL - Cellular modem host AT library <https://github.com/MaJerle/lwcell>
+    LwJSON - JSON parser <https://github.com/MaJerle/lwjson>
+    LwMEM - Memory manager <https://github.com/MaJerle/lwmem>
+    LwOW - OneWire with UART <https://github.com/MaJerle/lwow>
+    LwPKT - Packet protocol <https://github.com/MaJerle/lwpkt>
+    LwPRINTF - Printf <https://github.com/MaJerle/lwprintf>
+    LwRB - Ring buffer <https://github.com/MaJerle/lwrb>
+    LwSHELL - Shell <https://github.com/MaJerle/lwshell>
+    LwUTIL - Utility functions <https://github.com/MaJerle/lwutil>
+    LwWDG - RTOS task watchdog <https://github.com/MaJerle/lwwdg>

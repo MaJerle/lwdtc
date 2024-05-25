@@ -6,17 +6,21 @@ Platform independent Date, Time & Cron Utility library
 
 ## Features
 
-* Written in ANSI C99
+* Written in C (C11)
 * Platform independent, easy to use
 * Support for date, time and cron utilities
+* Ultra-lightweight cron library for embedded systems
+* Cron supports numbers only, no string dates/months, quicker parsing
+* Support for `time.h` `struct tm` data structure for time operations
+* Date and time range support with CRON syntax
 * User friendly MIT license
 
 ## Contribute
 
-Fresh contributions are always welcome. Simple instructions to proceed::
+Fresh contributions are always welcome. Simple instructions to proceed:
 
 1. Fork Github repository
-2. Respect [C style & coding rules](https://github.com/MaJerle/c-code-style) used by the library
+2. Follow [C style & coding rules](https://github.com/MaJerle/c-code-style) already used in the project
 3. Create a pull request to develop branch with new features or bug fixes
 
 Alternatively you may:

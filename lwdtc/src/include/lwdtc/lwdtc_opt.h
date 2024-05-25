@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright (c) 2022 Tilen MAJERLE
+ * Copyright (c) 2024 Tilen MAJERLE
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,10 +29,10 @@
  * This file is part of LwDTC - Lightweight Date, Time & Cron library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         $_version_$
+ * Version:         v1.0.0
  */
-#ifndef LWDTC_HDR_OPT_H
-#define LWDTC_HDR_OPT_H
+#ifndef LWDTC_OPT_HDR_H
+#define LWDTC_OPT_HDR_H
 
 /* Uncomment to ignore user options (or set macro in compiler flags) */
 /* #define LWDTC_IGNORE_USER_OPTS */
@@ -52,7 +52,29 @@ extern "C" {
  * \{
  */
 
+/**
+ * \brief           Memory set function
+ * 
+ * \note            Function footprint is the same as \ref memset
+ */
+#ifndef LWDTC_MEMSET
+#define LWDTC_MEMSET(dst, val, len) memset((dst), (val), (len))
+#endif
 
+/**
+ * \brief           Get the local time (struct tm) from the time_t pointer type
+ * 
+ * Default implementation uses localtime but user may use gmtime or even create its own implementation,
+ * depending on the target system and overall wishes.
+ * 
+ * \param[in]       _struct_tm_ptr_: Pointer variable to `struct tm` type.
+ *                      Variable is a pointer type and does not store actual time data.
+ * \param[in]       _const_time_t_ptr_: Pointer to the `time_t` variable to get time from
+ */
+#ifndef LWDTC_CFG_GET_LOCALTIME
+#define LWDTC_CFG_GET_LOCALTIME(_struct_tm_ptr_, _const_time_t_ptr_)                                                   \
+    (void)localtime_s((_struct_tm_ptr_), (_const_time_t_ptr_))
+#endif
 
 /**
  * \}
@@ -62,4 +84,4 @@ extern "C" {
 }
 #endif /* __cplusplus */
 
-#endif /* LWDTC_HDR_OPT_H */
+#endif /* LWDTC_OPT_HDR_H */

@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright (c) 2022 Tilen MAJERLE
+ * Copyright (c) 2024 Tilen MAJERLE
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,10 +29,10 @@
  * This file is part of LwDTC - Lightweight Date, Time & Cron library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         $_version_$
+ * Version:         v1.0.0
  */
-#ifndef LWDTC_HDR_OPTS_H
-#define LWDTC_HDR_OPTS_H
+#ifndef LWDTC_OPTS_HDR_H
+#define LWDTC_OPTS_HDR_H
 
 /* Rename this file to "lwdtc_opts.h" for your application */
 
@@ -41,4 +41,4 @@
  * copy & replace here settings you want to change values
  */
 
-#endif /* LWDTC_HDR_OPTS_H */
+#endif /* LWDTC_OPTS_HDR_H */
