@@ -486,21 +486,17 @@ lwdtc_cron_next(const lwdtc_cron_ctx_t* cron_ctx, time_t curr_time, time_t* new_
             || !BIT_IS_SET(cron_ctx->wday, (uint32_t)tm_time.tm_wday)
             || !BIT_IS_SET(cron_ctx->hour, (uint32_t)tm_time.tm_hour)) {
             curr_time += 1800U - (curr_time % 1800U); /* Increase with the beg of a minute alignment */
-            goto before_cont;
-        }
-
-        /* Does the CRON happen in this minute? */
-        if (!BIT_IS_SET(cron_ctx->min, (uint32_t)tm_time.tm_min)) {
+        } else if (!BIT_IS_SET(cron_ctx->min, (uint32_t)tm_time.tm_min)) {
+            /* Does the CRON happen in this minute? */
             curr_time += 60U - (curr_time % 60U); /* Go to the beg of next minute */
-            goto before_cont;
+        } else { /* It happens in this minute, so just increase seconds counter and try again */
+            ++curr_time;
+            if (++tm_time.tm_sec <= LWDTC_SEC_MAX) {
+                continue;
+            }
         }
 
-        /* It happens in this minute, so just increase seconds counter and try again */
-        ++curr_time;
-        if (++tm_time.tm_sec <= LWDTC_SEC_MAX) {
-            continue;
-        }
-    before_cont:
+        /* Get new local time after all the updates */
         LWDTC_CFG_GET_LOCALTIME(&tm_time, &curr_time);
     }
     *new_time = curr_time;
