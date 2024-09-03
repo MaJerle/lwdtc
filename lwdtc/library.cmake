@@ -1,4 +1,4 @@
-# 
+#
 # LIB_PREFIX: LWDTC
 #
 # This file provides set of variables for end user
@@ -15,7 +15,7 @@
 set(LWDTC_CUSTOM_INC_DIR ${CMAKE_CURRENT_BINARY_DIR}/lib_inc)
 
 # Library core sources
-set(lwdtc_core_SRCS 
+set(lwdtc_core_SRCS
     ${CMAKE_CURRENT_LIST_DIR}/src/lwdtc/lwdtc.c
 )
 
@@ -26,9 +26,9 @@ set(lwdtc_include_DIRS
 )
 
 # Register library to the system
-add_library(lwdtc INTERFACE)
-target_sources(lwdtc INTERFACE ${lwdtc_core_SRCS})
-target_include_directories(lwdtc INTERFACE ${lwdtc_include_DIRS})
+add_library(lwdtc)
+target_sources(lwdtc PRIVATE ${lwdtc_core_SRCS})
+target_include_directories(lwdtc PUBLIC ${lwdtc_include_DIRS})
 target_compile_options(lwdtc PRIVATE ${LWDTC_COMPILE_OPTIONS})
 target_compile_definitions(lwdtc PRIVATE ${LWDTC_COMPILE_DEFINITIONS})
 
@@ -39,4 +39,5 @@ if(NOT LWDTC_OPTS_FILE)
 else()
     message(STATUS "Using custom lwdtc_opts.h file from ${LWDTC_OPTS_FILE}")
 endif()
+
 configure_file(${LWDTC_OPTS_FILE} ${LWDTC_CUSTOM_INC_DIR}/lwdtc_opts.h COPYONLY)
