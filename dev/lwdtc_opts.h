@@ -34,11 +34,8 @@
 #ifndef LWDTC_HDR_OPTS_H
 #define LWDTC_HDR_OPTS_H
 
-/* Rename this file to "lwdtc_opts.h" for your application */
-
-/*
- * Open "include/lwdtc/lwdtc_opt.h" and
- * copy & replace here settings you want to change values
- */
+/* Use GMTIME */
+#define LWDTC_CFG_GET_LOCALTIME(_struct_tm_ptr_, _const_time_t_ptr_)                                                   \
+    (void)gmtime_s((_struct_tm_ptr_), (_const_time_t_ptr_))
 
 #endif /* LWDTC_HDR_OPTS_H */

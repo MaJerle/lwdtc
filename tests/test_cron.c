@@ -26,7 +26,7 @@ typedef struct {
 
 /* Variables as reference */
 #define TIME_T_START   1693256990
-#define TIME_STR_START "2023-08-28_23:09:50" /* Monday */
+#define TIME_STR_START "2023-08-28_21:09:50" /* Monday */
 
 /*
  * List of test vectors.
@@ -40,21 +40,21 @@ typedef struct {
  */
 static cron_entry_t cron_entries[] = {
     /* Fire every second all the time */
-    CRON_ENTRY("* * * * * * *", "2023-08-28_23:09:51", "2023-08-28_23:09:52", "2023-08-28_23:09:53", NULL, NULL, NULL),
+    CRON_ENTRY("* * * * * * *", "2023-08-28_21:09:51", "2023-08-28_21:09:52", "2023-08-28_21:09:53", NULL, NULL, NULL),
 
     /* Fire every beginning of a minute */
-    CRON_ENTRY("0 * * * * * *", "2023-08-28_23:10:00", "2023-08-28_23:11:00", "2023-08-28_23:12:00", NULL, NULL, NULL),
+    CRON_ENTRY("0 * * * * * *", "2023-08-28_21:10:00", "2023-08-28_21:11:00", "2023-08-28_21:12:00", NULL, NULL, NULL),
 
     /* Fire every second on Tuesday */
     CRON_ENTRY("* * * * * 2 *", "2023-08-29_00:00:00", "2023-08-29_00:00:01", "2023-08-29_00:00:02", NULL, NULL, NULL),
 
     /* Fires every 5 seconds every day */
-    CRON_ENTRY("*/5 * * * * * *", "2023-08-28_23:09:55", "2023-08-28_23:10:00", "2023-08-28_23:10:05", NULL, NULL,
+    CRON_ENTRY("*/5 * * * * * *", "2023-08-28_21:09:55", "2023-08-28_21:10:00", "2023-08-28_21:10:05", NULL, NULL,
                NULL),
 
     /* Fires each 5 seconds in one minute, repeat this minute every 5 minutes
         (00:00, 00:05, 00:10, ..., 05:00, 05:05, 05:10, ..., 10:00, 10:05, 10:10, ...) */
-    CRON_ENTRY("*/5 */5 * * * * *", "2023-08-28_23:10:00", "2023-08-28_23:10:05", "2023-08-28_23:10:10", NULL, NULL,
+    CRON_ENTRY("*/5 */5 * * * * *", "2023-08-28_21:10:00", "2023-08-28_21:10:05", "2023-08-28_21:10:10", NULL, NULL,
                NULL),
 
     /* Fire every Friday at midnight */
@@ -62,11 +62,11 @@ static cron_entry_t cron_entries[] = {
                NULL),
 
     /* Fire every 2 hours, at the beginning of the hour (x:0:0) */
-    CRON_ENTRY("0 0 */2 * * * *", "2023-08-29_00:00:00", "2023-08-29_02:00:00", "2023-08-29_04:00:00", NULL, NULL,
+    CRON_ENTRY("0 0 */2 * * * *", "2023-08-28_22:00:00", "2023-08-29_00:00:00", "2023-08-29_02:00:00", NULL, NULL,
                NULL),
 
     /* Fires every second in an hour, but every second hour */
-    CRON_ENTRY("* * */2 * * * *", "2023-08-29_00:00:00", "2023-08-29_00:00:01", "2023-08-29_00:00:02", NULL, NULL,
+    CRON_ENTRY("* * */2 * * * *", "2023-08-28_22:00:00", "2023-08-28_22:00:01", "2023-08-28_22:00:02", NULL, NULL,
                NULL),
 
     /* Fires at midnight, every week between Monday and Friday */
@@ -93,11 +93,11 @@ static cron_entry_t cron_entries[] = {
                NULL),
 
     /* All seconds in a minute except second 48 */
-    CRON_ENTRY("49-47 * * * * * *", "2023-08-28_23:09:51", "2023-08-28_23:09:52", "2023-08-28_23:09:53", NULL, NULL,
+    CRON_ENTRY("49-47 * * * * * *", "2023-08-28_21:09:51", "2023-08-28_21:09:52", "2023-08-28_21:09:53", NULL, NULL,
                NULL),
 
     /* Every third second from 49 to 07 (49, 52, 55, 58, 01, 04, 07) */
-    CRON_ENTRY("49-07/3 * * * * * *", "2023-08-28_23:09:52", "2023-08-28_23:09:55", "2023-08-28_23:09:58", NULL, NULL,
+    CRON_ENTRY("49-07/3 * * * * * *", "2023-08-28_21:09:52", "2023-08-28_21:09:55", "2023-08-28_21:09:58", NULL, NULL,
                NULL),
 
     /* Every beginning of a minute at start of an hour, every Sunday and Tuesday-Friday */
@@ -124,8 +124,9 @@ test_dtc(void) {
 
     /* Get time and print to user */
     rawtime = TIME_T_START;
-    timeinfo = localtime(&rawtime);
+    timeinfo = gmtime(&rawtime);
     printf("Time: %s, raw: %u\r\n", prv_format_time_to_str(timeinfo), (int)rawtime);
+    printf("Number of Ctest entries: %u\r\n", (unsigned)(sizeof(cron_entries) / sizeof(cron_entries[0])));
 
     /* Run through all */
     uint64_t time_start = GetTickCount64();
@@ -144,12 +145,12 @@ test_dtc(void) {
 
                         /* Calculate data */
                         lwdtc_cron_next(&cron_ctx, rawtime, &rawtime);
-                        timeinfo = localtime(&rawtime);
+                        timeinfo = gmtime(&rawtime);
 
                         /* Format text */
                         time_next = prv_format_time_to_str(timeinfo);
                         if (strcmp(time_next, cron_entries[e_idx].next_str[idx]) != 0) {
-                            printf("Index: %02u: Test failed: cron: %s, exp: %s, got: %s\r\n", (unsigned)idx, cron_entries[e_idx].cron_str,
+                            printf("Index: [%02u][%02u]: Test failed: cron: %s, exp: %s, got: %s\r\n", (unsigned)e_idx,(unsigned)idx, cron_entries[e_idx].cron_str,
                                    cron_entries[e_idx].next_str[idx], time_next);
                             invalid = -1;
                         }
@@ -159,6 +160,7 @@ test_dtc(void) {
                 }
             }
         }
+        if (invalid != 0) {break;}
     }
     uint64_t time_end = GetTickCount64();
     printf("Total tick: %llu\r\n\r\n", (unsigned long long)(time_end - time_start));
