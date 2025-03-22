@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <windows.h>
+#include <locale.h>
 #include "lwdtc/lwdtc.h"
 
 typedef struct {
@@ -119,6 +120,7 @@ test_dtc(void) {
     lwdtc_cron_ctx_t cron_ctx = {0};
     time_t rawtime;
     struct tm* timeinfo;
+    int invalid = 0;
 
     /* Get time and print to user */
     rawtime = TIME_T_START;
@@ -133,9 +135,9 @@ test_dtc(void) {
 
             /* Run next several time and compare */
             rawtime = TIME_T_START;
-            for (size_t i = 0; i < (sizeof(cron_entries[0].next_str) / sizeof(cron_entries[0].next_str[0])); ++i) {
-                if (cron_entries[e_idx].next_str[i] != NULL) {
-                    size_t len_next_str = strlen(cron_entries[e_idx].next_str[i]);
+            for (size_t idx = 0; idx < (sizeof(cron_entries[0].next_str) / sizeof(cron_entries[0].next_str[0])); ++idx) {
+                if (cron_entries[e_idx].next_str[idx] != NULL) {
+                    size_t len_next_str = strlen(cron_entries[e_idx].next_str[idx]);
 
                     if (len_next_str > 0) {
                         const char* time_next;
@@ -146,10 +148,10 @@ test_dtc(void) {
 
                         /* Format text */
                         time_next = prv_format_time_to_str(timeinfo);
-                        if (strcmp(time_next, cron_entries[e_idx].next_str[i]) != 0) {
-                            printf("Test failed: cron: %s, exp: %s, got: %s\r\n", cron_entries[e_idx].cron_str,
-                                   cron_entries[e_idx].next_str[i], time_next);
-                            return -1;
+                        if (strcmp(time_next, cron_entries[e_idx].next_str[idx]) != 0) {
+                            printf("Index: %02u: Test failed: cron: %s, exp: %s, got: %s\r\n", (unsigned)idx, cron_entries[e_idx].cron_str,
+                                   cron_entries[e_idx].next_str[idx], time_next);
+                            invalid = -1;
                         }
                     } else {
                         break;
@@ -161,5 +163,5 @@ test_dtc(void) {
     uint64_t time_end = GetTickCount64();
     printf("Total tick: %llu\r\n\r\n", (unsigned long long)(time_end - time_start));
 
-    return 0;
+    return invalid;
 }
