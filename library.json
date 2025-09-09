@@ -31,6 +31,8 @@
         ]
     },
     "build": {
-        "includeDir": "lwdtc/src/include"
+        "includeDir": "lwdtc/src/include",
+        "srcDir": ".",
+        "srcFilter": "+<lwdtc>"
     }
 }
