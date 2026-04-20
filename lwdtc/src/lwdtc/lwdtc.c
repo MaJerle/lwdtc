@@ -384,6 +384,7 @@ lwdtc_cron_parse_with_len(lwdtc_cron_ctx_t* ctx, const char* cron_str, size_t cr
  */
 lwdtcr_t
 lwdtc_cron_parse(lwdtc_cron_ctx_t* ctx, const char* cron_str) {
+    ASSERT_PARAM(cron_str != NULL);
     return lwdtc_cron_parse_with_len(ctx, cron_str, strlen(cron_str));
 }
 
@@ -406,6 +407,12 @@ lwdtc_cron_parse_multi(lwdtc_cron_ctx_t* cron_ctx, const char** cron_strs, size_
 
     /* Parse all input strings, each to its own cron context structure */
     for (size_t i = 0; i < ctx_len; ++i) {
+        if (cron_strs[i] == NULL) {
+            if (fail_index != NULL) {
+                *fail_index = i;
+            }
+            return lwdtcERRPAR;
+        }
         res = lwdtc_cron_parse_with_len(&cron_ctx[i], cron_strs[i], strlen(cron_strs[i]));
         if (res != lwdtcOK) {
             if (fail_index != NULL) {
