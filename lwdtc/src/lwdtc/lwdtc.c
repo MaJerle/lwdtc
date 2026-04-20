@@ -245,6 +245,9 @@ prv_get_and_parse_next_token(prv_cron_parser_ctx_t* parser, uint8_t* bit_map, si
             ASSERT_TOKEN_VALID(prv_parse_num(&parser->new_token[idx], parser->new_token_len - idx, &idx, &bit_step)
                                == lwdtcOK);
 
+            /* Step of 0 would make the bit-setting loop below never advance */
+            ASSERT_TOKEN_VALID(bit_step > 0);
+
             /*
              * If user did not specify range (min-max) values,
              * then all bits to the end of value are valid.
