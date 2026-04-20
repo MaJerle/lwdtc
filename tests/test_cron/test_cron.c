@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <windows.h>
+#include <time.h>
 #include "lwdtc/lwdtc.h"
 
 typedef struct {
@@ -129,7 +129,7 @@ test_run(void) {
     printf("Number of Ctest entries: %u\r\n", (unsigned)(sizeof(cron_entries) / sizeof(cron_entries[0])));
 
     /* Run through all */
-    uint64_t time_start = GetTickCount64();
+    clock_t time_start = clock();
     for (size_t runindex = 0; runindex < 100; runindex++) {
         for (size_t e_idx = 0; e_idx < (sizeof(cron_entries) / sizeof(cron_entries[0])); ++e_idx) {
             lwdtc_cron_parse(&cron_ctx, cron_entries[e_idx].cron_str);
@@ -166,8 +166,9 @@ test_run(void) {
             break;
         }
     }
-    uint64_t time_end = GetTickCount64();
-    printf("Total tick: %llu\r\n\r\n", (unsigned long long)(time_end - time_start));
+    clock_t time_end = clock();
+    printf("Total ms: %llu\r\n\r\n",
+           (unsigned long long)(((double)(time_end - time_start) * 1000.0) / (double)CLOCKS_PER_SEC));
 
     return invalid;
 }
