@@ -96,10 +96,49 @@ test_step_zero(void) {
 #endif
 }
 
+/*
+ * Defect: prv_parse_num accepted max_len but never decremented it in
+ * the digit loop, so parsing only stopped at a non-digit byte. With
+ * lwdtc_cron_parse_with_len (intended for non-NUL-terminated input),
+ * trailing digits past the declared length were silently consumed and
+ * produced wrong values or spurious ERRTOKEN, depending on the
+ * bytes sitting after the declared range.
+ *
+ * Expected behaviour: parsing must honour the declared length. Two
+ * equivalent inputs — one with benign padding, one with digit padding
+ * — must produce the same result.
+ */
+static void
+test_with_len_bounds(void) {
+    lwdtc_cron_ctx_t ctx_clean = {0};
+    lwdtc_cron_ctx_t ctx_dirty = {0};
+
+    /* Declared cron: "0 0 0 1 1 0 5" (13 chars, valid 7-field).
+       buf_clean is NUL-padded past byte 13; buf_dirty has digits
+       past byte 13 that would be consumed by the over-read. */
+    char buf_clean[32];
+    char buf_dirty[32];
+    memset(buf_clean, 0, sizeof buf_clean);
+    memset(buf_dirty, 0, sizeof buf_dirty);
+    memcpy(buf_clean, "0 0 0 1 1 0 5", 13);
+    memcpy(buf_dirty, "0 0 0 1 1 0 5", 13);
+    memcpy(buf_dirty + 13, "99", 2);
+
+    lwdtcr_t r1 = lwdtc_cron_parse_with_len(&ctx_clean, buf_clean, 13);
+    lwdtcr_t r2 = lwdtc_cron_parse_with_len(&ctx_dirty, buf_dirty, 13);
+
+    CHECK(r1 == lwdtcOK, "with_len baseline: clean buffer parses");
+    CHECK(r2 == lwdtcOK, "with_len honours declared length (no over-read)");
+    CHECK(r1 == r2, "with_len: clean vs dirty padding produce same result");
+    CHECK(memcmp(&ctx_clean, &ctx_dirty, sizeof ctx_clean) == 0,
+          "with_len: resulting ctx identical regardless of trailing bytes");
+}
+
 int
 test_regression_run(void) {
     g_fails = 0;
     test_step_zero();
+    test_with_len_bounds();
     test_null_str();
     return g_fails;
 }
