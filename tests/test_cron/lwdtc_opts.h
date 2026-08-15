@@ -35,7 +35,12 @@
 #define LWDTC_HDR_OPTS_H
 
 /* Use GMTIME */
+#if defined(_WIN32)
 #define LWDTC_CFG_GET_LOCALTIME(_struct_tm_ptr_, _const_time_t_ptr_)                                                   \
     (void)gmtime_s((_struct_tm_ptr_), (_const_time_t_ptr_))
+#else
+#define LWDTC_CFG_GET_LOCALTIME(_struct_tm_ptr_, _const_time_t_ptr_)                                                   \
+    (void)gmtime_r((_const_time_t_ptr_), (_struct_tm_ptr_))
+#endif /* defined(_WIN32) */
 
 #endif /* LWDTC_HDR_OPTS_H */
