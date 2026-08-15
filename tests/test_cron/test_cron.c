@@ -111,6 +111,74 @@ static cron_entry_t cron_entries[] = {
     /* First day of month, wrapping month range with step: Nov, then wraps to Feb (11, 14->2, 5 stops), then Nov again */
     CRON_ENTRY("0 0 0 1 11-2/3 * *", "2023-11-01_00:00:00", "2024-02-01_00:00:00", "2024-11-01_00:00:00", NULL, NULL,
                NULL),
+
+    /* Wrapping day-of-month range with step (28-5/3): wraps to {28, 31, 3} */
+    CRON_ENTRY("0 0 0 28-5/3 * * *", "2023-08-31_00:00:00", "2023-09-03_00:00:00", "2023-09-28_00:00:00", NULL, NULL,
+               NULL),
+
+    /* Wrapping weekday range, default step (Friday-Monday): {Fri, Sat, Sun, Mon} at noon */
+    CRON_ENTRY("0 0 12 * * 5-1 *", "2023-09-01_12:00:00", "2023-09-02_12:00:00", "2023-09-03_12:00:00",
+               "2023-09-04_12:00:00", NULL, NULL),
+
+    /* Feb 29th only fires on leap years */
+    CRON_ENTRY("0 0 0 29 2 * *", "2024-02-29_00:00:00", NULL, NULL, NULL, NULL, NULL),
+
+    /* Hour comma-list combined with a sub-range (22, 0-2) */
+    CRON_ENTRY("0 0 22,0-2 * * * *", "2023-08-28_22:00:00", "2023-08-29_00:00:00", "2023-08-29_01:00:00",
+               "2023-08-29_02:00:00", NULL, NULL),
+
+    /* Irregular step that doesn't evenly divide the range (5-50/7) */
+    CRON_ENTRY("5-50/7 * * * * * *", "2023-08-28_21:10:05", "2023-08-28_21:10:12", "2023-08-28_21:10:19", NULL, NULL,
+               NULL),
+
+    /* Wrapping month range with step where the wrapped side contributes nothing (10-1/4):
+       stepping from 10 lands on 2 first, which already overshoots the declared end of 1 */
+    CRON_ENTRY("0 0 0 1 10-1/4 * *", "2023-10-01_00:00:00", NULL, NULL, NULL, NULL, NULL),
+
+    /* Wrapping month range with step (6-3/2): wraps to {6, 8, 10, 12, 2} */
+    CRON_ENTRY("0 0 0 1 6-3/2 * *", "2023-10-01_00:00:00", "2023-12-01_00:00:00", "2024-02-01_00:00:00", NULL, NULL,
+               NULL),
+
+    /* Non-wrapping hour range with step (6-18/4): {6, 10, 14, 18} */
+    CRON_ENTRY("30 30 6-18/4 * * * *", "2023-08-29_06:30:30", "2023-08-29_10:30:30", "2023-08-29_14:30:30", NULL, NULL,
+               NULL),
+
+    /* Day 31 only fires in months that actually have 31 days */
+    CRON_ENTRY("0 0 0 31 * * *", "2023-08-31_00:00:00", "2023-10-31_00:00:00", "2023-12-31_00:00:00", NULL, NULL, NULL),
+
+    /* Last second of Saturday and Sunday */
+    CRON_ENTRY("59 59 23 * * 6,0 *", "2023-09-02_23:59:59", "2023-09-03_23:59:59", "2023-09-09_23:59:59", NULL, NULL,
+               NULL),
+
+    /* Minute comma-list (quarter past and quarter to) */
+    CRON_ENTRY("0 15,45 * * * * *", "2023-08-28_21:15:00", "2023-08-28_21:45:00", "2023-08-28_22:15:00", NULL, NULL,
+               NULL),
+
+    /* 15th of Jan/Apr/Jul/Oct */
+    CRON_ENTRY("0 0 0 15 1,4,7,10 * *", "2023-10-15_00:00:00", "2024-01-15_00:00:00", "2024-04-15_00:00:00", NULL, NULL,
+               NULL),
+
+    /* New Year's Day */
+    CRON_ENTRY("0 0 0 1 1 * *", "2024-01-01_00:00:00", NULL, NULL, NULL, NULL, NULL),
+
+    /* Second-field step with no range, defaults to running to the field's max (0, 15, 30, 45) */
+    CRON_ENTRY("*/15 0 0 * * * *", "2023-08-29_00:00:00", "2023-08-29_00:00:15", "2023-08-29_00:00:30", NULL, NULL,
+               NULL),
+
+    /* Business hours (9 and 17), Monday to Friday */
+    CRON_ENTRY("0 0 9-17/8 * * 1-5 *", "2023-08-29_09:00:00", "2023-08-29_17:00:00", "2023-08-30_09:00:00", NULL, NULL,
+               NULL),
+
+    /* Tuesday and Thursday at 12:30:00 */
+    CRON_ENTRY("0 30 12 * * 2,4 *", "2023-08-29_12:30:00", "2023-08-31_12:30:00", "2023-09-05_12:30:00", NULL, NULL,
+               NULL),
+
+    /* 1st of every month, restricted to year 2023 only */
+    CRON_ENTRY("0 0 0 1 * * 23", "2023-09-01_00:00:00", "2023-10-01_00:00:00", "2023-11-01_00:00:00", NULL, NULL, NULL),
+
+    /* Wrapping day-of-month range with step, multi-element wrap side (27-6/5): wraps to {27, 1, 6} */
+    CRON_ENTRY("0 0 0 27-6/5 * * *", "2023-09-01_00:00:00", "2023-09-06_00:00:00", "2023-09-27_00:00:00", NULL, NULL,
+               NULL),
 };
 
 #define BIT_SET(map, pos) (map)[(pos) >> 3U] |= (1U << ((pos) & 0x07U))
