@@ -72,8 +72,15 @@ extern "C" {
  * \param[in]       _const_time_t_ptr_: Pointer to the `time_t` variable to get time from
  */
 #ifndef LWDTC_CFG_GET_LOCALTIME
+#if defined(_WIN32)
+/* MSVC / mingw CRT: errno_t localtime_s(struct tm* dest, const time_t* src) */
 #define LWDTC_CFG_GET_LOCALTIME(_struct_tm_ptr_, _const_time_t_ptr_)                                                   \
     (void)localtime_s((_struct_tm_ptr_), (_const_time_t_ptr_))
+#else
+/* POSIX: struct tm* localtime_r(const time_t* src, struct tm* dest) -- argument order is reversed */
+#define LWDTC_CFG_GET_LOCALTIME(_struct_tm_ptr_, _const_time_t_ptr_)                                                   \
+    (void)localtime_r((_const_time_t_ptr_), (_struct_tm_ptr_))
+#endif
 #endif
 
 /**
