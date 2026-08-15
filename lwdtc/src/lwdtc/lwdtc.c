@@ -90,7 +90,7 @@ prv_parse_num(const char* token, size_t max_len, size_t* index, size_t* out_num)
 
     /* Parse number in decimal format */
     *out_num = 0;
-    while (max_len > 0 && CHAR_IS_NUM(token[cnt])) {
+    while (cnt < max_len && CHAR_IS_NUM(token[cnt])) {
         *out_num = (*out_num) * 10U + CHAR_TO_NUM(token[cnt]);
         ++cnt;
     }
