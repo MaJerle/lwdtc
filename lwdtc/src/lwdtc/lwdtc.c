@@ -280,8 +280,12 @@ prv_get_and_parse_next_token(prv_cron_parser_ctx_t* parser, uint8_t* bit_map, si
             for (bit = bit_end_pos; bit <= val_max; bit += bit_step) {
                 BIT_SET(bit_map, bit);
             }
-            /* We start at the multiplier of bit_step value */
-            for (bit = bit % bit_step + val_min; bit <= bit_start_pos; bit += bit_step) {
+
+            /*
+             * Continue stepping from where the loop above stopped, carrying the remainder
+             * of the step over the wrap point (val_max -> val_min)
+             */
+            for (bit = val_min + (bit - val_max - 1); bit <= bit_start_pos; bit += bit_step) {
                 BIT_SET(bit_map, bit);
             }
         } else {

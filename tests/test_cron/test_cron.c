@@ -103,6 +103,10 @@ static cron_entry_t cron_entries[] = {
     /* Every beginning of a minute at start of an hour, every Sunday and Tuesday-Friday */
     CRON_ENTRY("0 0 13 * * 0,2-5 *", "2023-08-29_13:00:00", "2023-08-30_13:00:00", "2023-08-31_13:00:00",
                "2023-09-01_13:00:00", "2023-09-03_13:00:00", "2023-09-05_13:00:00"),
+
+    /* First day of month, wrapping month range with step: Nov, then wraps to Feb (11, 14->2, 5 stops), then Nov again */
+    CRON_ENTRY("0 0 0 1 11-2/3 * *", "2023-11-01_00:00:00", "2024-02-01_00:00:00", "2024-11-01_00:00:00", NULL, NULL,
+               NULL),
 };
 
 #define BIT_SET(map, pos) (map)[(pos) >> 3U] |= (1U << ((pos) & 0x07U))
