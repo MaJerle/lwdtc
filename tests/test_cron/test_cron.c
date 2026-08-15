@@ -2,7 +2,11 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#if defined(_WIN32)
 #include <windows.h>
+#else
+#include <time.h>
+#endif /* defined(_WIN32) */
 #include "lwdtc/lwdtc.h"
 
 typedef struct {
@@ -111,6 +115,17 @@ static cron_entry_t cron_entries[] = {
 
 #define BIT_SET(map, pos) (map)[(pos) >> 3U] |= (1U << ((pos) & 0x07U))
 
+static uint64_t
+prv_get_tick_ms(void) {
+#if defined(_WIN32)
+    return GetTickCount64();
+#else
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (uint64_t)ts.tv_sec * 1000U + (uint64_t)ts.tv_nsec / 1000000U;
+#endif /* defined(_WIN32) */
+}
+
 static const char*
 prv_format_time_to_str(struct tm* dt) {
     static char str[64];
@@ -133,7 +148,7 @@ test_run(void) {
     printf("Number of Ctest entries: %u\r\n", (unsigned)(sizeof(cron_entries) / sizeof(cron_entries[0])));
 
     /* Run through all */
-    uint64_t time_start = GetTickCount64();
+    uint64_t time_start = prv_get_tick_ms();
     for (size_t runindex = 0; runindex < 100; runindex++) {
         for (size_t e_idx = 0; e_idx < (sizeof(cron_entries) / sizeof(cron_entries[0])); ++e_idx) {
             lwdtc_cron_parse(&cron_ctx, cron_entries[e_idx].cron_str);
@@ -170,7 +185,7 @@ test_run(void) {
             break;
         }
     }
-    uint64_t time_end = GetTickCount64();
+    uint64_t time_end = prv_get_tick_ms();
     printf("Total tick: %llu\r\n\r\n", (unsigned long long)(time_end - time_start));
 
     return invalid;
