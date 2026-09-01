@@ -86,9 +86,9 @@ static lwdtcr_t
 prv_parse_num(const char* token, size_t max_len, size_t* index, size_t* out_num) {
     size_t cnt = 0;
 
-    ASSERT_TOKEN_VALID(CHAR_IS_NUM(*token));
+    ASSERT_TOKEN_VALID(max_len > 0 && CHAR_IS_NUM(*token));
 
-    /* Parse number in decimal format */
+    /* Parse number in decimal format, bounded by max_len */
     *out_num = 0;
     while (cnt < max_len && CHAR_IS_NUM(token[cnt])) {
         *out_num = (*out_num) * 10U + CHAR_TO_NUM(token[cnt]);
@@ -245,6 +245,9 @@ prv_get_and_parse_next_token(prv_cron_parser_ctx_t* parser, uint8_t* bit_map, si
             ASSERT_TOKEN_VALID(prv_parse_num(&parser->new_token[idx], parser->new_token_len - idx, &idx, &bit_step)
                                == lwdtcOK);
 
+            /* Step of 0 would make the bit-setting loop below never advance */
+            ASSERT_TOKEN_VALID(bit_step > 0);
+
             /*
              * If user did not specify range (min-max) values,
              * then all bits to the end of value are valid.
@@ -388,6 +391,7 @@ lwdtc_cron_parse_with_len(lwdtc_cron_ctx_t* ctx, const char* cron_str, size_t cr
  */
 lwdtcr_t
 lwdtc_cron_parse(lwdtc_cron_ctx_t* ctx, const char* cron_str) {
+    ASSERT_PARAM(cron_str != NULL);
     return lwdtc_cron_parse_with_len(ctx, cron_str, strlen(cron_str));
 }
 
@@ -410,6 +414,12 @@ lwdtc_cron_parse_multi(lwdtc_cron_ctx_t* cron_ctx, const char** cron_strs, size_
 
     /* Parse all input strings, each to its own cron context structure */
     for (size_t i = 0; i < ctx_len; ++i) {
+        if (cron_strs[i] == NULL) {
+            if (fail_index != NULL) {
+                *fail_index = i;
+            }
+            return lwdtcERRPAR;
+        }
         res = lwdtc_cron_parse_with_len(&cron_ctx[i], cron_strs[i], strlen(cron_strs[i]));
         if (res != lwdtcOK) {
             if (fail_index != NULL) {
