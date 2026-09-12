@@ -6,7 +6,7 @@ Platform independent Date, Time & Cron Utility library
 
 ## Features
 
-* Written in C (C11), compatible with `stdint.h` for size data types
+* Written in C (C11), compatible with `stdint.h` data types
 * Platform independent, easy to use
 * Support for date, time and cron utilities
 * Ultra-lightweight cron library for embedded systems
