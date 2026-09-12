@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright (c) 2024 Tilen MAJERLE
+ * Copyright (c) 2026 Tilen MAJERLE
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -101,7 +101,7 @@ prv_parse_num(const char* token, size_t max_len, size_t* index, size_t* out_num)
 /**
  * \brief           Get start of next token from a list
  * \param[in,out]   parser: Parser structure with all input data
- * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise 
+ * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise
  */
 static lwdtcr_t
 prv_get_next_token(prv_cron_parser_ctx_t* parser) {
@@ -161,9 +161,9 @@ prv_get_and_parse_next_token(prv_cron_parser_ctx_t* parser, uint8_t* bit_map, si
          *
          * - "*", indicating all values in the field available range
          * - digit, indicating fixed bit position
-         * 
+         *
          * Followed by first character, second step is optional:
-         * 
+         *
          * - "/" to indicate steps (applicable for "*" or digit). Can also appear after range step
          * - "-" to indicate range
          * - "," to indicate custom values
@@ -173,7 +173,8 @@ prv_get_and_parse_next_token(prv_cron_parser_ctx_t* parser, uint8_t* bit_map, si
          * - "min-max": Range value, min and max are defined by numbers, step is 1
          * - "min-max/step": Range value with min and max, step defined by number
          * - "max-min": Range value, from max to the end of possible field and from 0 to the min value
-         * - "max-min/step": Range value, from max to the end of possible field and from 0 to the min value, step defined by number
+         * - "max-min/step": Range value, from max to the end of possible field and from 0 to the min value, step
+         * defined by number
          * - "*": All values between possible minimum and maximum
          * - "* /step": All values between possible minimum and maximum for specific field,
          *          step defined by number
@@ -235,7 +236,7 @@ prv_get_and_parse_next_token(prv_cron_parser_ctx_t* parser, uint8_t* bit_map, si
 
         /*
          * Character "/" indicates steps between start and stop bit position
-         * 
+         *
          * A step_bit must be calculated according to input value and
          * end_position must be set to maximum, but only when range is not used,
          * indicating we want to use full range of available value
@@ -428,7 +429,7 @@ lwdtc_cron_parse_multi(lwdtc_cron_ctx_t* cron_ctx, const char** cron_strs, size_
  *                      Function assumes values in the structure are within valid boundaries
  *                      and does not perform additional check
  * \param[in]       cron_ctx: Cron context object with valid structure
- * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise 
+ * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise
  */
 lwdtcr_t
 lwdtc_cron_is_valid_for_time(const struct tm* tm_time, const lwdtc_cron_ctx_t* cron_ctx) {
@@ -436,13 +437,13 @@ lwdtc_cron_is_valid_for_time(const struct tm* tm_time, const lwdtc_cron_ctx_t* c
 
     ASSERT_PARAM(tm_time != NULL && cron_ctx != NULL);
 
-    /* 
+    /*
      * Cron is valid only if all values are a pass
-     * 
+     *
      * This is different from crontab linux command where, for example, cron is valid:
-     * - When particular day in month occurs 
+     * - When particular day in month occurs
      * - or when particular day in week occurs, effectively becoming OR operation.
-     * 
+     *
      * Our cron is a valid when bitwise AND-ed between all fields is a pass
      */
     if (!BIT_IS_SET(cron_ctx->sec, (uint32_t)tm_time->tm_sec) || !BIT_IS_SET(cron_ctx->min, (uint32_t)tm_time->tm_min)
@@ -458,15 +459,15 @@ lwdtc_cron_is_valid_for_time(const struct tm* tm_time, const lwdtc_cron_ctx_t* c
 
 /**
  * \brief           Get next time of fire for specific cron object
- * 
+ *
  * This is a dirty implementation and could be improved in the future.
  * For now, we start with one second after current time, and do the roll
  * over all values until we have a match.
- * 
+ *
  * \param           cron_ctx: CRON context object
  * \param           curr_time: Current time, used as reference to get new time
  * \param[out]      new_time: Pointer to new time value
- * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise 
+ * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise
  */
 lwdtcr_t
 lwdtc_cron_next(const lwdtc_cron_ctx_t* cron_ctx, time_t curr_time, time_t* new_time) {
@@ -480,7 +481,7 @@ lwdtc_cron_next(const lwdtc_cron_ctx_t* cron_ctx, time_t curr_time, time_t* new_
     ++curr_time;
     LWDTC_CFG_GET_LOCALTIME(&tm_time, &curr_time);
     while (lwdtc_cron_is_valid_for_time(&tm_time, cron_ctx) != lwdtcOK) {
-        /* 
+        /*
          * Does the CRON happen in this hour?
          *
          * We do not jump for more than an hour, to avoid any timezone issues.
@@ -514,7 +515,7 @@ lwdtc_cron_next(const lwdtc_cron_ctx_t* cron_ctx, time_t curr_time, time_t* new_
  *                      and does not perform additional check
  * \param[in]       cron_ctx: Pointer to array of cron ctx objects
  * \param[in]       ctx_len: Number of context array length
- * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise 
+ * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise
  */
 lwdtcr_t
 lwdtc_cron_is_valid_for_time_multi_or(const struct tm* tm_time, const lwdtc_cron_ctx_t* cron_ctx, size_t ctx_len) {
@@ -539,7 +540,7 @@ lwdtc_cron_is_valid_for_time_multi_or(const struct tm* tm_time, const lwdtc_cron
  *                      and does not perform additional check
  * \param[in]       cron_ctx: Pointer to array of cron ctx objects
  * \param[in]       ctx_len: Number of context array length
- * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise 
+ * \return          \ref lwdtcOK on success, member of \ref lwdtcr_t otherwise
  */
 lwdtcr_t
 lwdtc_cron_is_valid_for_time_multi_and(const struct tm* tm_time, const lwdtc_cron_ctx_t* cron_ctx, size_t ctx_len) {

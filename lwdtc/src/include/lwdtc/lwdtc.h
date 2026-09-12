@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright (c) 2024 Tilen MAJERLE
+ * Copyright (c) 2026 Tilen MAJERLE
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -85,7 +85,7 @@ typedef enum {
 
 /**
  * \brief           Cron context variable with parsed information
- * 
+ *
  * It is a bit-field of ones and zeros, indicating a match (or not)
  * for date-time comparison to determine if needs to run (or not) a task
  */
@@ -105,10 +105,10 @@ lwdtcr_t lwdtc_cron_parse(lwdtc_cron_ctx_t* ctx, const char* cron_str);
 lwdtcr_t lwdtc_cron_parse_multi(lwdtc_cron_ctx_t* cron_ctx, const char** cron_strs, size_t ctx_len, size_t* fail_index);
 
 lwdtcr_t lwdtc_cron_is_valid_for_time(const struct tm* tm_time, const lwdtc_cron_ctx_t* cron_ctx);
-lwdtcr_t lwdtc_cron_is_valid_for_time_multi_or(const struct tm* tm_time, const lwdtc_cron_ctx_t* cron_ctx,
-                                               size_t ctx_len);
-lwdtcr_t lwdtc_cron_is_valid_for_time_multi_and(const struct tm* tm_time, const lwdtc_cron_ctx_t* cron_ctx,
-                                                size_t ctx_len);
+lwdtcr_t
+lwdtc_cron_is_valid_for_time_multi_or(const struct tm* tm_time, const lwdtc_cron_ctx_t* cron_ctx, size_t ctx_len);
+lwdtcr_t
+lwdtc_cron_is_valid_for_time_multi_and(const struct tm* tm_time, const lwdtc_cron_ctx_t* cron_ctx, size_t ctx_len);
 lwdtcr_t lwdtc_cron_next(const lwdtc_cron_ctx_t* cron_ctx, time_t curr_time, time_t* new_time);
 
 /**
