@@ -2,7 +2,7 @@
 
 Platform independent Date, Time & Cron Utility library
 
-<h3>Read first: <a href="http://docs.majerle.eu/projects/lwdtc/">Documentation</a></h3>
+[Open documentation](https://docs.majerle.eu/projects/lwdtc/)
 
 ## Features
 
