@@ -23,8 +23,12 @@ Features
 * Support for date, time and cron utilities
 * Ultra-lightweight cron library for embedded systems
 * Cron supports numbers only, no string dates/months, quicker parsing
-* Support for `time.h` `struct tm` data structure for time operations
+* Support for the ``struct tm`` data structure from ``time.h`` for time operations
 * Date and time range support with CRON syntax
+* Wrap-around range syntax, e.g. max-min, to cross the field boundary
+* Parse multiple cron expressions in a single call, with failing index reported
+* Combine multiple cron contexts with AND or OR match semantics
+* Calculate the next matching run time for a cron expression
 * User friendly MIT license
 
 Requirements
