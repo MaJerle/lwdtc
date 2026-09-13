@@ -1,6 +1,8 @@
 # Lightweight Date, Time & Cron
 
-Platform independent Date, Time & Cron Utility library
+LwDTC is a lightweight, platform independent library for date, time and cron utility management.
+
+Main motivation comes from the necessity of simple cron for my own personal home automation project, with `1` second granularity.
 
 [Open documentation](https://docs.majerle.eu/projects/lwdtc/)
 
